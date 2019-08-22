@@ -11,6 +11,14 @@ def normal_equation(data):
 	X = arr[:, :-1]
 	X = np.insert(X, 0, 1, axis=1)
 	
-	# Normal equation
-	theta = ((np.linalg.inv(X.T.dot(X))).dot(X.T)).dot(Y)
+	# Normal equation: step 1
+	square = X.T.dot(X)
+	
+	# Check if matrix is invertible
+	if np.linalg.det(square) == 0:
+		print("Matrix not invertible! Cannot be solved by normal equation.")
+		return None
+	
+	# Rest of equation
+	theta = ((np.linalg.inv(square)).dot(X.T)).dot(Y)
 	return theta
