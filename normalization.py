@@ -72,15 +72,8 @@ def avg_traffic_per_weather(data):
 
 def remove_and_cast_features(data):
 
-    # Defining the new header for processed data
-    weekdays = {0:"mon", 1:"tue", 2:"wed", 3:"thu", 4:"fry", 5:"sat", 6:"sun"}
-    desc_list = list(set([x[6] for x in data[1:]])) # Get unique values
-    hour_list = list(map(str,range(0,24)))
-    new_head = data[0][0:5] + desc_list + hour_list + list(weekdays.values()) + [data[0][-1][0:-1]]
-    data_frame = [new_head]
-    # for i in new_head : print(i)
-
     for i in range(1,len(data)):
+        data[i][6] = data[i][6].lower()
         if data[i][0] == 'None' : data[i][0] = 0.0
         elif data[i][0] != 1.0:
             day = curr_day = int(re.split("-|:| ", data[i][-2])[2])
@@ -93,9 +86,16 @@ def remove_and_cast_features(data):
 
             for k in range(i,j) : data[k][0] = 1.0
 
+    # Discrete variables lists
+    weekdays = {0:"mon", 1:"tue", 2:"wed", 3:"thu", 4:"fry", 5:"sat", 6:"sun"}
+    desc_list = list(set([x[6] for x in data[1:]])) # Get unique values
+    hour_list = list(map(str,range(0,24)))
+    
+    # Defining the new header and frame for processed data
+    new_head = data[0][0:5] + desc_list + hour_list + list(weekdays.values()) + [data[0][-1][0:-1]]
+    data_frame = [new_head]
 
-    # print([i[2] for i in data])
-
+    # Indexes to be casted
     cast_float = [1,2,3,4,8]
 
     for i in range(1,len(data)):
@@ -132,21 +132,7 @@ def remove_and_cast_features(data):
 
         # Quantitative data
         data_frame[-1][-1] = data[i][-1]
-        data_frame[-1][:5] = data[i][:5]
-
-        # Rearrange table
-
-    # print(data[0])
-    # print(data[i])
-    for i in range(len(data_frame)) : 
-        if data_frame[i][-1] == 5969 :
-            print("--(",i,")-----------------------------") 
-            for j in list(zip(data_frame[0],data_frame[i])):
-                print(j)
-            # exit()                        	
-
-    
-     
+        data_frame[-1][:5] = data[i][:5]     
 
 
 def read_and_normalize():
