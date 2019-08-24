@@ -5,7 +5,7 @@ from numpy import array as arr
 import matplotlib.pyplot as plt 
 import re
 import pandas as pd
-import datetime
+from datetime import date as date_check 
 
 # Plots a relation between the average daily traffic per hour
 def avg_traffic_hour_daily(data):
@@ -73,10 +73,12 @@ def avg_traffic_per_weather(data):
 def remove_and_cast_features(data):
 
     # Defining the new header for processed data
+    weekdays = {0:"mon", 1:"tue", 2:"wed", 3:"thu", 4:"fry", 5:"sat", 6:"sun"}
     desc_list = list(set([x[6] for x in data[1:]])) # Get unique values
     hour_list = list(map(str,range(0,24)))
-    new_head = data[0][0:5] + desc_list + hour_list + [data[0][-1][0:-1]]
+    new_head = data[0][0:5] + desc_list + hour_list + list(weekdays.values()) + [data[0][-1][0:-1]]
     data_frame = [new_head]
+    # for i in new_head : print(i)
 
     for i in range(1,len(data)):
         if data[i][0] == 'None' : data[i][0] = 0.0
@@ -92,11 +94,16 @@ def remove_and_cast_features(data):
             for k in range(i,j) : data[k][0] = 1.0
 
 
-    print(list(map(print,data)))
+    # print([i[2] for i in data])
 
     cast_float = [1,2,3,4,8]
 
     for i in range(1,len(data)):
+        # Ignore data with 0 kelvin
+        if data[i][1] == 0 : continue
+        # Ignore duplicate hours (due to multiple weather description)
+        if data[i-1][-2] == data[i][-2] : continue
+
         # Add row to dataframe
         data_frame.append([0.0]*len(new_head)) 
 
@@ -105,28 +112,38 @@ def remove_and_cast_features(data):
       
         # split and cast date
         date = re.split("-|:| ", data[i][-2])
-        year = date[0]
-        month = date[1]
-        day = date[2]
-        hour = str(int(date[3]))
+        year = int(date[0])
+        month = int(date[1])
+        day = int(date[2])
+        hour = int(date[3])
 
-        # Set discrete hour varible
-        data_frame[i][new_head.index(hour)] = 1.0
+        # Set discrete weekday variable
+        day_name = weekdays[date_check(year,month,day).weekday()]
+        data_frame[-1][new_head.index(day_name)] = 1.0
 
-        # Set discrete classification data varible
-        data_frame[i][new_head.index(data[i][6])] = 1.0
+        # Set discrete hour variable
+        data_frame[-1][new_head.index(str(hour))] = 1.0
+
+        # Set discrete weather description variables
+        j = i
+        while j < len(data) and data[j][-2] == data[i][-2] :
+            data_frame[-1][new_head.index(data[j][6])] = 1.0 
+            j += 1
 
         # Quantitative data
-        data_frame[i][-1] = data[i][-1]
-        data_frame[i][:5] = data[i][:5]
+        data_frame[-1][-1] = data[i][-1]
+        data_frame[-1][:5] = data[i][:5]
 
-        print(data[0])
-        print(data[i])
-        for j in zip(data_frame[0],data_frame[i]) : print(j)
-        
-
-        break
         # Rearrange table
+
+    # print(data[0])
+    # print(data[i])
+    for i in range(len(data_frame)) : 
+        if data_frame[i][-1] == 5969 :
+            print("--(",i,")-----------------------------") 
+            for j in list(zip(data_frame[0],data_frame[i])):
+                print(j)
+            # exit()                        	
 
     
      
