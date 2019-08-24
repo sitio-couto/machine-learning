@@ -4,15 +4,8 @@ import numpy as np
 from numpy import array as arr
 import matplotlib.pyplot as plt 
 import re
-
-def date_split(date):
-    date = re.split("-|:| ", date)
-    year = int(date[0])
-    month = int(date[1])
-    day = int(date[2])
-    hour = int(date[3])
-    return hour, day, month, year 
-
+import pandas as pd
+import datetime
 
 # Plots a relation between the average daily traffic per hour
 def avg_traffic_hour_daily(data):
@@ -77,14 +70,74 @@ def avg_traffic_per_weather(data):
     return
 
 
+def remove_and_cast_features(data):
+
+    # Defining the new header for processed data
+    desc_list = list(set([x[6] for x in data[1:]])) # Get unique values
+    hour_list = list(map(str,range(0,24)))
+    new_head = data[0][0:5] + desc_list + hour_list + [data[0][-1][0:-1]]
+    data_frame = [new_head]
+
+    for i in range(1,len(data)):
+        if data[i][0] == 'None' : data[i][0] = 0.0
+        elif data[i][0] != 1.0:
+            day = curr_day = int(re.split("-|:| ", data[i][-2])[2])
+            
+            j = i
+            while j < len(data) :
+                curr_day = int(re.split("-|:| ", data[j][-2])[2])
+                if day != curr_day : break
+                else : j += 1
+
+            for k in range(i,j) : data[k][0] = 1.0
+
+
+    print(list(map(print,data)))
+
+    cast_float = [1,2,3,4,8]
+
+    for i in range(1,len(data)):
+        # Add row to dataframe
+        data_frame.append([0.0]*len(new_head)) 
+
+        # Cast numeric values read as string
+        for j in cast_float : data[i][j] = float(data[i][j]) 
+      
+        # split and cast date
+        date = re.split("-|:| ", data[i][-2])
+        year = date[0]
+        month = date[1]
+        day = date[2]
+        hour = str(int(date[3]))
+
+        # Set discrete hour varible
+        data_frame[i][new_head.index(hour)] = 1.0
+
+        # Set discrete classification data varible
+        data_frame[i][new_head.index(data[i][6])] = 1.0
+
+        # Quantitative data
+        data_frame[i][-1] = data[i][-1]
+        data_frame[i][:5] = data[i][:5]
+
+        print(data[0])
+        print(data[i])
+        for j in zip(data_frame[0],data_frame[i]) : print(j)
+        
+
+        break
+        # Rearrange table
+
+    
+     
+
+
 def read_and_normalize():
     datafile = open(argv[1])
     data = list(map(lambda x : x.split(","), datafile.readlines()))
 
-    for i in range(1,len(data)):
-        data[i].pop(6) # Remove especific forecast data
-        data[i][-1] = int(data[i][-1][:-1]) # Cast traffic to int
-
+    remove_and_cast_features(data)
+    
 ####################
 read_and_normalize()
 ####################
