@@ -9,13 +9,22 @@ import pandas as pd
 from datetime import date as date_check 
 
 def date_split(string):
+    ''' Read date-time in "yyyy-mm-dd hh:mm:ss" and cast to int.
+
+        Parameters:
+            string (string): string containing the mentioned format.
+
+        Returns:
+            (dictionary): contains date-time info indexed by initials.
+    '''
+
     date = re.split("-|:| ", string)
     year = int(date[0])
     month = int(date[1])
     day = int(date[2])
     hour = int(date[3])
 
-    return hour, day, month, year
+    return {"h":hour, "d":day, "m":month, "y":year}
 
 # Plots a relation between the average daily traffic per hour
 def avg_traffic_hour_daily(data):
@@ -24,7 +33,7 @@ def avg_traffic_hour_daily(data):
     curr_day = 0
     traffic_hour = []
     for x in data[1:] :
-        hour, day, _, _ = date_split(x[6])
+        hour, day, _, _ = date_split(x[6]).values()
         if (day != curr_day):
             curr_day = day
             traffic_hour.append(arr([0]*24))
@@ -80,24 +89,36 @@ def avg_traffic_per_weather(data):
     return
 
 
-def process_data(data):
+def process_input(data):
+    ''' Remove and re-format input data.
+
+        Parameters:
+            data (array list): csv table with the dataset header and content.
+            
+        Returns:
+            data_frame (array list):  processed input data.
+    '''
 
     # Alter and remove data
-    for i in range(1,len(data)):
-        # Remove main weather description
-        data[i][6] = data[i][6].lower()
+    for (i,d) in enumerate(data[1:], start=1):
+        # Cast weather description to lower case
+        data[i][6] = d[6].lower()
 
-        # Propagate and normalize holidays
-        if data[i][0] == 'None' : data[i][0] = 0.0
-        elif data[i][0] != 1.0:
-            day = curr_day = int(re.split("-|:| ", data[i][-2])[2])
-            
+        # Propagate holidays and cast them to binary
+        if d[0] == 'None' : 
+            # In case theres no holiday
+            data[i][0] = 0.0 
+        elif d[0] != 1.0:
+            # In case theres a non-binary holyday
+            # Count how many holidays flags are missing
             j = i
+            day = curr_day = date_split(d[-2])['d']
             while j < len(data) :
-                curr_day = int(re.split("-|:| ", data[j][-2])[2])
+                curr_day = date_split(data[j][-2])['d']
                 if day != curr_day : break
                 else : j += 1
 
+            # Iterate through timestamps binning holidays
             for k in range(i,j) : data[k][0] = 1.0
 
     # Discrete variables lists
@@ -127,11 +148,7 @@ def process_data(data):
         for j in cast_float : data[i][j] = float(data[i][j]) 
       
         # split and cast date
-        date = re.split("-|:| ", data[i][-2])
-        year = int(date[0])
-        month = int(date[1])
-        day = int(date[2])
-        hour = int(date[3])
+        hour, day, month, year = date_split(data[i][-2]).values()
 
         # Set discrete weekday variable
         day_name = weekdays[date_check(year,month,day).weekday()]
@@ -146,76 +163,92 @@ def process_data(data):
             data_frame[-1][new_head.index(data[j][6])] = 1.0 
             j += 1
 
-        # Quantitative data
+        # Set quantitative data
         data_frame[-1][-1] = data[i][-1]
         data_frame[-1][:5] = data[i][:5]     
 
     return data_frame
 
-def normalize_data(data):
-    # Indexes of features to be scaled
+def normalize_data(data, choice=1):
+    ''' Returns the normalizad dataset.
+    
+        Parameters:
+            data (array list): csv table with  the dataset header and content.
+            choice (int): integer indicating the transformation to be used.
+
+        Returns:
+            data (array list):  transformed data (original data is lost).
+    '''
+    
+    # Indexes of features to be normalized
     features = [1,2,3,4]
 
-    # Values for mean normalization
-    means = [0]*len(features)
-    ranges = [(maxsize, -maxsize)]*len(features)
-    std_dv = [0]*len(features)
+    # Data to be colected
+    ranges = []
+    means = []
+    maxs = []
+    mins = []
+    stds = []
 
-    # Get necessary values to calculate means and reanges of the features
-    for entry in data[1:]:
-        for (i,f) in enumerate(features):
-            means[i] += entry[f]
-            ranges[i] = (min(entry[f], ranges[i][0]),max(entry[f], ranges[i][1]))
-
-    # Calcualte means, mins and ranges of the features
-    means = [x/(len(data)-1) for x in means]
-    mins = [x[0] for x in ranges]
-    ranges = [x[1]-x[0] for x in ranges]
-
-    # Calculate the standard deviation of the features
-    for entry in data[1:]:
-        for (i,f) in enumerate(features):
-            std_dv[i] += (entry[f] - means[i])**2
-    std_dv = [sqrt(x/(len(data)-1)) for x in std_dv]
+    # Gathering necessary data
+    features_list = [[d[f] for d in data[1:]] for f in features]
+    for fl in  features_list:
+        means.append(np.mean(fl))
+        maxs.append(max(fl))
+        mins.append(min(fl))
+        stds.append(np.std(fl))
+        ranges.append(maxs[-1]-mins[-1])
 
     #### Transforming the dataset ####
 
-    # # Standardization
-    # for entry in data[1:]:
-    #     for (i,f) in enumerate(features):
-    #         entry[f] = (entry[f] - means[i])/std_dv[i] 
-
-    # Min-max normalization
-    for entry in data[1:]:
-        for (i,f) in enumerate(features):
-            entry[f] = (entry[f] - mins[i])/ranges[i] 
-
-    # # Mean normalization
-    # for entry in data[1:]:
-    #     for (i,f) in enumerate(features):
-    #         entry[f] = (entry[f] - means[i])/ranges[i] 
+    if choice == 1:
+        # Min-max normalization
+        for entry in data[1:]:
+            for (i,f) in enumerate(features):
+                entry[f] = (entry[f] - mins[i])/ranges[i]  
+    elif choice == 2:
+        # Standardization
+        for entry in data[1:]:
+            for (i,f) in enumerate(features):
+                entry[f] = (entry[f] - means[i])/std_dv[i]
+    elif choice == 3:
+        # Mean normalization
+        for entry in data[1:]:
+            for (i,f) in enumerate(features):
+                entry[f] = (entry[f] - means[i])/ranges[i] 
 
     return data
 
-def read_and_normalize():
+
+def prepare_dataset():
+    ''' Reads and prepares a dataset for regression.
+    
+        Returns:
+            X (array list): coeficients matrix with label.
+            Y (array list): results matrix with label.
+    '''
+
     datafile = open(argv[1])
     data = list(map(lambda x : x.split(","), datafile.readlines()))
 
-    data = process_data(data)
+    data = process_input(data)
     data = normalize_data(data)
     
-    sums = [0]*4
-    minimuns = [maxsize]*4
-    maximuns = [-maxsize]*4
-    for d in data[1:]:
-       for (i,f) in enumerate([1,2,3,4]):
-           sums[i] += d[f]
-           maximuns[i] = max(maximuns[i], d[f])
-           minimuns[i] = min(minimuns[i], d[f])
-    print("Maxs=>", maximuns)
-    print("Mins=>", minimuns)
-    print("Means=>", [x/(len(data)-1) for x in sums])
+    # Separate processed data in coeficients and results
+    X = data
+    Y = [[x.pop()] for x in data]
+
+    return X, Y
 
 ####################
-read_and_normalize()
+
+X, Y = prepare_dataset()
+
+# # Check
+# for (i,t) in enumerate(Y):
+#     if t[0] == 5969:
+#         print("---(",i,")----------------------------")
+#         list(map(print,zip(X[0],X[i])))
+#         print(list(zip(Y[0],Y[i]))[0])
+
 ####################
