@@ -1,4 +1,4 @@
-from sys import argv
+from sys import argv, maxsize
 from collections import Counter
 import numpy as np
 from numpy import array as arr
@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 import re
 import pandas as pd
 from datetime import date as date_check 
+
+def date_split(string):
+    date = re.split("-|:| ", string)
+    year = int(date[0])
+    month = int(date[1])
+    day = int(date[2])
+    hour = int(date[3])
+
+    return hour, day, month, year
 
 # Plots a relation between the average daily traffic per hour
 def avg_traffic_hour_daily(data):
@@ -70,10 +79,14 @@ def avg_traffic_per_weather(data):
     return
 
 
-def remove_and_cast_features(data):
+def process_data(data):
 
+    # Alter and remove data
     for i in range(1,len(data)):
+        # Remove main weather description
         data[i][6] = data[i][6].lower()
+
+        # Propagate and normalize holidays
         if data[i][0] == 'None' : data[i][0] = 0.0
         elif data[i][0] != 1.0:
             day = curr_day = int(re.split("-|:| ", data[i][-2])[2])
@@ -100,9 +113,11 @@ def remove_and_cast_features(data):
 
     for i in range(1,len(data)):
         # Ignore data with 0 kelvin
-        if data[i][1] == 0 : continue
+        if float(data[i][1]) == 0 : continue
         # Ignore duplicate hours (due to multiple weather description)
         if data[i-1][-2] == data[i][-2] : continue
+        # Ignore ridiculous ammounts of rain
+        if float(data[i][2]) > 300 : continue
 
         # Add row to dataframe
         data_frame.append([0.0]*len(new_head)) 
@@ -134,13 +149,51 @@ def remove_and_cast_features(data):
         data_frame[-1][-1] = data[i][-1]
         data_frame[-1][:5] = data[i][:5]     
 
+    return data_frame
+
+def normalize_data(data):
+    # Indexes of features to be scaled
+    features = [1,2,3,4]
+    
+    # Values for mean normalization
+    means = [0]*len(features)
+    ranges = [(maxsize, -maxsize)]*len(features)
+
+    # Calculate means and reanges of the features to be scaled
+    for entry in data[1:]:
+        for (i,f) in enumerate(features):
+            means[i] += entry[f]
+            ranges[i] = (min(entry[f], ranges[i][0]),max(entry[f], ranges[i][1]))
+    means = [x/len(data) for x in means]
+    ranges = [x[1]-x[0] for x in ranges]
+    print("Medias=>",means)
+    print("Ranges=>",ranges)
+
+    # Feature scaling
+    for entry in data[1:]:
+        for (i,f) in enumerate(features):
+            entry[f] = entry[f]/ranges[i] 
+
+    # # Mean normalization
+    # for entry in data[1:]:
+    #     for (i,f) in enumerate(features):
+    #         entry[f] = (entry[f] - means[i])/ranges[i] 
+
+    return data
 
 def read_and_normalize():
     datafile = open(argv[1])
     data = list(map(lambda x : x.split(","), datafile.readlines()))
 
-    remove_and_cast_features(data)
+    data = process_data(data)
+    data = normalize_data(data)
     
+    for d in data:
+        if d[-1] == 5969:
+            print("--(",data.index(d),")--------------------")
+            list(map(print, zip(data[0], d)))
+            exit(1)
+
 ####################
 read_and_normalize()
 ####################

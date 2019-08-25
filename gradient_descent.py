@@ -40,6 +40,7 @@ def gradient(X, T, Y):
     gradient_vals = (1/m)*tp(X.dot(T) - Y).dot(X)
     return tp(gradient_vals)
 
+# Two ways of writing the gradient calculation
 # (1/m)*tp(X).dot(X.dot(T) - Y)
 # tp((1/m)*tp(X.dot(T) - Y).dot(X))
 
