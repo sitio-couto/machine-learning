@@ -57,27 +57,28 @@ def batch_gradient(X, T, Y):
     gradient_vals = (1/m)*tp(X.dot(T) - Y).dot(X)
     return tp(gradient_vals)
 
-# Static varible for indexing the used sample
+# def minib_gradient(X, T, Y):
+
 def stoch_gradient(X, T, Y):
     ''' Returns the gradient calculated using a single random sample.'''
     m = Y.shape[0]
     i = randint(0,(m-1)) # Select random sample
-    gradient_vals = (1/m)*(X[[i]].dot(T) - Y[i])*tp(X[[i]])
+    gradient_vals = (X[[i]].dot(T) - Y[i])*tp(X[[i]])
     return gradient_vals
 
 # Two ways of writing the gradient calculation
 # (1/m)*tp(X).dot(X.dot(T) - Y)
 # tp((1/m)*tp(X.dot(T) - Y).dot(X))
 
-# Sample 1 => Unsolvable
-X = np.array([[1, 2, 3],[4, 5, 6],[7, 8, 9]])
-Y = np.array([[3],[6],[9]])
-T = np.array([[2],[4],[6]])
-
-# # Sample 2 => Expects T = ( 1,-1, 3)
-# X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
-# Y = np.array([[8],[3],[11]])
+# # Sample 1 => Unsolvable
+# X = np.array([[1, 2, 3],[4, 5, 6],[7, 8, 9]])
+# Y = np.array([[3],[6],[9]])
 # T = np.array([[2],[4],[6]])
+
+# Sample 2 => Expects T = ( 1,-1, 3)
+X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
+Y = np.array([[8],[3],[11]])
+T = np.array([[2],[4],[6]])
 
 T = descent(X, T, Y)
 print(T)
