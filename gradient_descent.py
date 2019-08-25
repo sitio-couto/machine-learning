@@ -1,12 +1,13 @@
 import numpy as np
-from random import randint
+from random import randint, sample
 from numpy import transpose as tp
 import time
 
 STEP_LIMIT = 10**(-3) # Step size accepted as convergence
-TIME_LIMIT = 10       # Descent limit given in seconds
-ITER_LIMIT = 10**5    # Maximum amount of iterations for the gradient
-ALPHA = 0.0001        # Learning rate
+TIME_LIMIT = 10**2       # Descent limit given in seconds
+ITER_LIMIT = 10**6    # Maximum amount of iterations for the gradient
+MINI_SIZE = 10         # Defines the size for the mini batch
+ALPHA = 0.01          # Learning rate
 
 def cost(X, T, Y):
     '''Returns the cost function value for the given set of variables.'''
@@ -35,7 +36,7 @@ def descent(X, T, Y):
     old_cost = cost(X, T, Y)
     while (end_time - start_time) <= TIME_LIMIT:
         # Getting new Thetas
-        T = T - ALPHA*stoch_gradient(X, T, Y)
+        T = T - ALPHA*batch_gradient(X, T, Y)
         count += 1 # Count iteration
 
         # Updating hyperparameters
@@ -57,13 +58,17 @@ def batch_gradient(X, T, Y):
     gradient_vals = (1/m)*tp(X.dot(T) - Y).dot(X)
     return tp(gradient_vals)
 
-# def minib_gradient(X, T, Y):
+def minib_gradient(X, T, Y):
+    m = Y.shape[0]
+    b = sample(range(0,(m-1)),MINI_SIZE)
+    gradient_vals = (1/MINI_SIZE)*tp(X[b].dot(T) - Y[b]).dot(X[b])
+    return tp(gradient_vals)
 
 def stoch_gradient(X, T, Y):
     ''' Returns the gradient calculated using a single random sample.'''
     m = Y.shape[0]
-    i = randint(0,(m-1)) # Select random sample
-    gradient_vals = (X[[i]].dot(T) - Y[i])*tp(X[[i]])
+    i = [randint(0,(m-1))] # Select random sample
+    gradient_vals = (X[i].dot(T) - Y[i])*tp(X[i])
     return gradient_vals
 
 # Two ways of writing the gradient calculation
@@ -75,10 +80,20 @@ def stoch_gradient(X, T, Y):
 # Y = np.array([[3],[6],[9]])
 # T = np.array([[2],[4],[6]])
 
-# Sample 2 => Expects T = ( 1,-1, 3)
-X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
-Y = np.array([[8],[3],[11]])
-T = np.array([[2],[4],[6]])
+# # Sample 2 => Expects T = ( 1,-1, 3)
+# X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
+# Y = np.array([[8],[3],[11]])
+# T = np.array([[2],[4],[6]])
+
+# Sample 3 => Large generated sample
+f = 40 # amount of features
+m = 50 # amount of samples
+X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
+Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
+T = [[i for i in sample(range(-20,20),1)] for x in range(f)]
+X = np.array(X)
+Y = np.array(Y)
+T = np.array(T)
 
 T = descent(X, T, Y)
 print(T)
