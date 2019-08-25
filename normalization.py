@@ -1,6 +1,7 @@
 from sys import argv, maxsize
 from collections import Counter
 import numpy as np
+from numpy import sqrt
 from numpy import array as arr
 import matplotlib.pyplot as plt 
 import re
@@ -154,23 +155,40 @@ def process_data(data):
 def normalize_data(data):
     # Indexes of features to be scaled
     features = [1,2,3,4]
-    
+
     # Values for mean normalization
     means = [0]*len(features)
     ranges = [(maxsize, -maxsize)]*len(features)
+    std_dv = [0]*len(features)
 
-    # Calculate means and reanges of the features to be scaled
+    # Get necessary values to calculate means and reanges of the features
     for entry in data[1:]:
         for (i,f) in enumerate(features):
             means[i] += entry[f]
             ranges[i] = (min(entry[f], ranges[i][0]),max(entry[f], ranges[i][1]))
+
+    # Calcualte means, mins and ranges of the features
     means = [x/(len(data)-1) for x in means]
+    mins = [x[0] for x in ranges]
     ranges = [x[1]-x[0] for x in ranges]
 
-    # Feature scaling
+    # Calculate the standard deviation of the features
     for entry in data[1:]:
         for (i,f) in enumerate(features):
-            entry[f] = entry[f]/ranges[i] 
+            std_dv[i] += (entry[f] - means[i])**2
+    std_dv = [sqrt(x/(len(data)-1)) for x in std_dv]
+
+    #### Transforming the dataset ####
+
+    # # Standardization
+    # for entry in data[1:]:
+    #     for (i,f) in enumerate(features):
+    #         entry[f] = (entry[f] - means[i])/std_dv[i] 
+
+    # Min-max normalization
+    for entry in data[1:]:
+        for (i,f) in enumerate(features):
+            entry[f] = (entry[f] - mins[i])/ranges[i] 
 
     # # Mean normalization
     # for entry in data[1:]:
