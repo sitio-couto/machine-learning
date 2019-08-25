@@ -164,10 +164,8 @@ def normalize_data(data):
         for (i,f) in enumerate(features):
             means[i] += entry[f]
             ranges[i] = (min(entry[f], ranges[i][0]),max(entry[f], ranges[i][1]))
-    means = [x/len(data) for x in means]
+    means = [x/(len(data)-1) for x in means]
     ranges = [x[1]-x[0] for x in ranges]
-    print("Medias=>",means)
-    print("Ranges=>",ranges)
 
     # Feature scaling
     for entry in data[1:]:
@@ -188,11 +186,17 @@ def read_and_normalize():
     data = process_data(data)
     data = normalize_data(data)
     
-    for d in data:
-        if d[-1] == 5969:
-            print("--(",data.index(d),")--------------------")
-            list(map(print, zip(data[0], d)))
-            exit(1)
+    sums = [0]*4
+    minimuns = [maxsize]*4
+    maximuns = [-maxsize]*4
+    for d in data[1:]:
+       for (i,f) in enumerate([1,2,3,4]):
+           sums[i] += d[f]
+           maximuns[i] = max(maximuns[i], d[f])
+           minimuns[i] = min(minimuns[i], d[f])
+    print("Maxs=>", maximuns)
+    print("Mins=>", minimuns)
+    print("Means=>", [x/(len(data)-1) for x in sums])
 
 ####################
 read_and_normalize()
