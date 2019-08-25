@@ -59,6 +59,7 @@ def batch_gradient(X, T, Y):
     return tp(gradient_vals)
 
 def minib_gradient(X, T, Y):
+    ''' Returns the gradient calculate using a portion of the samples'''
     m = Y.shape[0]
     b = sample(range(0,(m-1)),MINI_SIZE)
     gradient_vals = (1/MINI_SIZE)*tp(X[b].dot(T) - Y[b]).dot(X[b])
