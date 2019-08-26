@@ -1,6 +1,5 @@
 import numpy as np
 from random import randint, sample
-from numpy import transpose as tp
 from sklearn import linear_model
 import time
 
@@ -72,21 +71,21 @@ def descent(X, T, Y):
 def batch_gradient(X, T, Y):
     ''' Returns the gradiente calculated using all samples.'''
     m = Y.shape[0]
-    gradient_vals = (1/m)*tp(X.dot(T) - Y).dot(X)
-    return tp(gradient_vals)
+    gradient_vals = (1/m)*(X.dot(T) - Y).T.dot(X)
+    return (gradient_vals).T
 
 def minib_gradient(X, T, Y):
     ''' Returns the gradient calculate using a portion of the samples'''
     m = Y.shape[0]
     b = sample(range(0,(m-1)),MINI_SIZE)
-    gradient_vals = (1/MINI_SIZE)*tp(X[b].dot(T) - Y[b]).dot(X[b])
-    return tp(gradient_vals)
+    gradient_vals = (1/MINI_SIZE)*(X[b].dot(T) - Y[b]).T.dot(X[b])
+    return (gradient_vals).T
 
 def stoch_gradient(X, T, Y):
     ''' Returns the gradient calculated using a single random sample.'''
     m = Y.shape[0]
     i = [randint(0,(m-1))] # Select random sample
-    gradient_vals = (X[i].dot(T) - Y[i])*tp(X[i])
+    gradient_vals = (X[i].dot(T) - Y[i])*(X[i]).T
     return gradient_vals
 
 def sk_regressor(X, Y):
