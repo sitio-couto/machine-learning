@@ -4,9 +4,9 @@ from sklearn import linear_model
 import time
 
 STEP_LIMIT = 10**(-3) # Step size accepted as convergence
-TIME_LIMIT = 10**2       # Descent limit given in seconds
+TIME_LIMIT = 10**1       # Descent limit given in seconds
 ITER_LIMIT = 10**6    # Maximum amount of iterations for the gradient
-MINI_SIZE = 10         # Defines the size for the mini batch
+MINI_SIZE = 2         # Defines the size for the mini batch
 ALPHA = 0.01          # Learning rate
 
 def numpy_and_bias(X, Y):
@@ -27,9 +27,18 @@ def cost(X, T, Y):
     cost = (1/(2*m))*sum((X.dot(T) - Y)**2)
     return cost[0] 
 
+def shuffle_samples(X, Y):
+    '''Return samples in randomized order'''
+    X = np.concatenate((X,Y),axis=1)
+    np.random.shuffle(X)
+    Y = X[:,[-1]]
+    X = X[:,:-1]
+    return X, Y 
+
 def descent(X, T, Y):
     '''
         Return the models convergence obtained by the gradient descent.
+        It is assumed that the bias is already included and the samples are shuffled.
 
         Parameters:
             X (Float 2dArray): The coeficient matrix.
@@ -39,10 +48,7 @@ def descent(X, T, Y):
         Returns:
             T (Float 2dArray): The minimized cost coeficients obtained for the model.
     '''
-    
-    X,Y = numpy_and_bias(X, Y)
-    T = np.array(T)
-        
+
     # Setting time limit variables
     end_time = 0
     start_time = time.time()
@@ -76,16 +82,30 @@ def batch_gradient(X, T, Y):
 
 def minib_gradient(X, T, Y):
     ''' Returns the gradient calculate using a portion of the samples'''
+    # Get index of first sample for the mini batch
+    base = minib_gradient.count
     m = Y.shape[0]
-    b = sample(range(0,(m-1)),MINI_SIZE)
+    b = list(range(base, min((base + MINI_SIZE), m)))
     gradient_vals = (1/MINI_SIZE)*(X[b].dot(T) - Y[b]).T.dot(X[b])
+
+    # Update samples for mini batch
+    minib_gradient.count += MINI_SIZE
+    if minib_gradient.count >= m:
+        minib_gradient.count = 0 
+
     return (gradient_vals).T
 
 def stoch_gradient(X, T, Y):
     ''' Returns the gradient calculated using a single random sample.'''
     m = Y.shape[0]
-    i = [randint(0,(m-1))] # Select random sample
+    i = [stoch_gradient.count] # Get next sample
     gradient_vals = (X[i].dot(T) - Y[i])*(X[i]).T
+
+    # Update sample for stochastic
+    stoch_gradient.count += 1
+    if stoch_gradient.count >= m:
+        stoch_gradient.count = 0 
+
     return gradient_vals
 
 def sk_regressor(X, Y):
@@ -126,6 +146,13 @@ def normal_equation(X, Y):
 	theta = ((np.linalg.inv(square)).dot(X.T)).dot(Y)
 	return theta
 
+### Static variables ####
+# References the current sample(s) used, ensuring that gradients
+# such as stoch and minib iterate through all the samples instead
+# of repeating samples in each iteration.
+minib_gradient.count = 0
+stoch_gradient.count = 0
+#########################
 
 # Two ways of writing the gradient calculation
 # (1/m)*tp(X).dot(X.dot(T) - Y)
@@ -136,20 +163,29 @@ def normal_equation(X, Y):
 # Y = np.array([[3],[6],[9]])
 # T = np.array([[2],[4],[6]])
 
-# # Sample 2 => Expects T = ( 1,-1, 3)
-# X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
-# Y = np.array([[8],[3],[11]])
-# T = np.array([[2],[4],[6]])
+# Sample 2 => Expects T = ( 1,-1, 3)
+X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
+Y = np.array([[8],[3],[11]])
+T = np.array([[2],[4],[6]])
 
-# Sample 3 => Large generated sample
-f = 40 # amount of features
-m = 50 # amount of samples
-X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
-Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
-T = [[i for i in sample(range(-20,20),1)] for x in range(f)]
-X = np.array(X)
-Y = np.array(Y)
-T = np.array(T)
+# # Sample 3 => Large generated sample
+# f = 40 # amount of features
+# m = 50 # amount of samples
+# X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
+# Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
+# T = [[i for i in sample(range(-20,20),1)] for x in range(f)]
+# X = np.array(X)
+# Y = np.array(Y)
+# T = np.array(T)
+
+# # Add bias features and coeficient
+# X,Y = numpy_and_bias(X, Y)
+# T = np.insert(T,0,randint(-10,10),axis=0)
+
+# Shuffle samples to randomize minib and stoch gradients
+X, Y = shuffle_samples(X,Y)
+
+
 
 T = descent(X, T, Y)
 print(T)
