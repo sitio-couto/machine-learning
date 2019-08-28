@@ -4,12 +4,12 @@ from sklearn import linear_model
 import time
 
 STEP_LIMIT = 10**(-3) # Step size accepted as convergence
-TIME_LIMIT = 10**1       # Descent limit given in seconds
+TIME_LIMIT = 10**1    # Descent limit given in seconds
 ITER_LIMIT = 10**6    # Maximum amount of iterations for the gradient
 MINI_SIZE = 2         # Defines the size for the mini batch
 ALPHA = 0.01          # Learning rate
 
-def numpy_and_bias(X, Y):
+def numpy_and_bias(X, Y, T_set=(-10,10)):
 	'''
 		Transforms lists for X and Y into numpy arrays.
 		Adds bias to feature matrix (X)
@@ -18,8 +18,9 @@ def numpy_and_bias(X, Y):
 	X = np.array(X)
 	Y = np.array(Y)
 	X = np.insert(X, 0, 1, axis=1)
-	
-	return (X,Y)
+	T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
+
+	return (X,Y,T)
 
 def cost(X, T, Y):
     '''Returns the cost function value for the given set of variables.'''
@@ -179,8 +180,7 @@ T = np.array([[2],[4],[6]])
 # T = np.array(T)
 
 # # Add bias features and coeficient
-# X,Y = numpy_and_bias(X, Y)
-# T = np.insert(T,0,randint(-10,10),axis=0)
+X,Y,T = numpy_and_bias(X,Y)
 
 # Shuffle samples to randomize minib and stoch gradients
 X, Y = shuffle_samples(X,Y)
