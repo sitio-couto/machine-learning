@@ -1,4 +1,4 @@
-from sys import argv, maxsize
+from sys import maxsize
 from collections import Counter
 import numpy as np
 from numpy import sqrt
@@ -220,7 +220,7 @@ def normalize_data(data, choice=1):
     return data
 
 
-def prepare_dataset():
+def prepare_dataset(train_set_name):
     ''' Reads and prepares a dataset for regression.
     
         Returns:
@@ -228,21 +228,21 @@ def prepare_dataset():
             Y (array list): results matrix with label.
     '''
 
-    datafile = open(argv[1])
+    datafile = open(train_set_name)
     data = list(map(lambda x : x.split(","), datafile.readlines()))
 
     data = process_input(data)
     data = normalize_data(data)
     
     # Separate processed data in coeficients and results
-    X = data
-    Y = [[x.pop()] for x in data]
+    X = data[1:] # Remove header
+    Y = [[x.pop()] for x in X]
 
     return X, Y
 
 ####################
 
-X, Y = prepare_dataset()
+# X, Y = prepare_dataset()
 
 # # Check
 # for (i,t) in enumerate(Y):

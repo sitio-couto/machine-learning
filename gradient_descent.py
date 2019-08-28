@@ -4,10 +4,10 @@ from sklearn import linear_model
 import time
 
 STEP_LIMIT = 10**(-3) # Step size accepted as convergence
-TIME_LIMIT = 10**1    # Descent limit given in seconds
+TIME_LIMIT = 180    # Descent limit given in seconds
 ITER_LIMIT = 10**6    # Maximum amount of iterations for the gradient
 MINI_SIZE = 2         # Defines the size for the mini batch
-ALPHA = 0.01          # Learning rate
+ALPHA = 0.1          # Learning rate
 
 def numpy_and_bias(X, Y, T_set=(-10,10)):
 	'''
@@ -20,7 +20,7 @@ def numpy_and_bias(X, Y, T_set=(-10,10)):
 	X = np.insert(X, 0, 1, axis=1)
 	T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
 
-	return (X,Y,T)
+	return (X,T,Y)
 
 def cost(X, T, Y):
     '''Returns the cost function value for the given set of variables.'''
@@ -36,7 +36,7 @@ def shuffle_samples(X, Y):
     X = X[:,:-1]
     return X, Y 
 
-def descent(X, T, Y):
+def descent(X, T, Y, type='s'):
     '''
         Return the models convergence obtained by the gradient descent.
         It is assumed that the bias is already included and the samples are shuffled.
@@ -45,6 +45,7 @@ def descent(X, T, Y):
             X (Float 2dArray): The coeficient matrix.
             T (Float 2dArray): The variables matrix (to be modified).
             Y (Float 2dArray): The results matrix.
+            type (int): The choice of descent ('s'-stoch|'m'-mini|'b'-batch).
 
         Returns:
             T (Float 2dArray): The minimized cost coeficients obtained for the model.
@@ -59,7 +60,14 @@ def descent(X, T, Y):
     old_cost = cost(X, T, Y)
     while (end_time - start_time) <= TIME_LIMIT:
         # Getting new Thetas
-        T = T - ALPHA*batch_gradient(X, T, Y)
+        if (type=='b'):
+            delta = batch_gradient(X, T, Y)
+        elif (type=='m'):
+            delta = minib_gradient(X, T, Y)
+        else:
+            delta = batch_gradient(X, T, Y)
+        
+        T = T - ALPHA*delta
         count += 1 # Count iteration
 
         # Updating hyperparameters
@@ -164,10 +172,10 @@ stoch_gradient.count = 0
 # Y = np.array([[3],[6],[9]])
 # T = np.array([[2],[4],[6]])
 
-# Sample 2 => Expects T = ( 1,-1, 3)
-X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
-Y = np.array([[8],[3],[11]])
-T = np.array([[2],[4],[6]])
+# # Sample 2 => Expects T = ( 1,-1, 3)
+# X = np.array([[4, -1, 1],[2, 5, 2],[1, 2, 4]])
+# Y = np.array([[8],[3],[11]])
+# T = np.array([[2],[4],[6]])
 
 # # Sample 3 => Large generated sample
 # f = 40 # amount of features
@@ -179,14 +187,14 @@ T = np.array([[2],[4],[6]])
 # Y = np.array(Y)
 # T = np.array(T)
 
-# # Add bias features and coeficient
-X,Y,T = numpy_and_bias(X,Y)
+# Add bias to features and generate the first set of T vals
+# X,T,Y = numpy_and_bias(X,Y)
 
 # Shuffle samples to randomize minib and stoch gradients
-X, Y = shuffle_samples(X,Y)
+# X, Y = shuffle_samples(X,Y)
 
 
 
-T = descent(X, T, Y)
-print(T)
-print("Cost =>",cost(X,T,Y))
+# T = descent(X, T, Y)
+# print(T)
+# print("Cost =>",cost(X,T,Y))
