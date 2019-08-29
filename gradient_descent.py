@@ -128,7 +128,7 @@ def sk_regressor(X, Y):
 	    Both need to be numpy arrays or lists	   
 	'''
 	
-	X,Y = numpy_and_bias(X, Y)
+	X,garb,Y = numpy_and_bias(X, Y)
 
 	clf = linear_model.SGDRegressor(max_iter = ITER_LIMIT, tol = STEP_LIMIT, alpha = ALPHA)
 	clf.fit(X,Y)
