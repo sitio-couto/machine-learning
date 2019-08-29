@@ -18,7 +18,8 @@ def numpy_and_bias(X, Y, T_set=(-10,10)):
 	X = np.array(X)
 	Y = np.array(Y)
 	X = np.insert(X, 0, 1, axis=1)
-	T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
+	#T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
+	T = np.array([[0] for x in range(X.shape[1])])
 
 	return (X,T,Y)
 
@@ -36,7 +37,7 @@ def shuffle_samples(X, Y):
     X = X[:,:-1]
     return X, Y 
 
-def descent(X, T, Y, type='s'):
+def descent(X, T, Y, type='b'):
     '''
         Return the models convergence obtained by the gradient descent.
         It is assumed that the bias is already included and the samples are shuffled.
@@ -65,13 +66,14 @@ def descent(X, T, Y, type='s'):
         elif (type=='m'):
             delta = minib_gradient(X, T, Y)
         else:
-            delta = batch_gradient(X, T, Y)
+            delta = stoch_gradient(X, T, Y)
         
         T = T - ALPHA*delta
         count += 1 # Count iteration
 
         # Updating hyperparameters
         new_cost = cost(X, T, Y)
+        print(new_cost)
         step = abs(old_cost - new_cost)
         old_cost = new_cost
         end_time = time.time()
@@ -141,7 +143,7 @@ def normal_equation(X, Y):
 		Both need to be numpy arrays or lists	
 	'''
 	# If the data is not a numpy array. 
-	X,Y = numpy_and_bias(X,Y)
+	X,garb,Y = numpy_and_bias(X,Y)
 	
 	# Normal equation: step 1
 	square = X.T.dot(X)

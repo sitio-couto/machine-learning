@@ -13,3 +13,6 @@ X, T, Y = desc.numpy_and_bias(X, Y)
 T = desc.descent(X, T, Y)
 
 print(desc.cost(X,T,Y))
+
+T = desc.normal_equation(X,Y)
+print(desc.cost(X,T,Y))
