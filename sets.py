@@ -2,8 +2,9 @@ import csv
 import os
 import numpy as np
 from math import floor
+from random import sample
 
-TEST_SIZE  = 0.2
+TEST_SIZE  = 0.1
 VALID_SIZE = 0.1
 FOLDER_NAME= 'Datasets'
 VALID_FILE = 'validate.csv'
@@ -26,7 +27,7 @@ def split_sets(filename):
 	amount = np.size(data, 0)
 	
 	# Getting validation set from random positions and saving to CSV file
-	valid_idx = np.random.randint(low=0, high=(amount-1), size=(floor(amount*VALID_SIZE)))
+	valid_idx = np.array(sample(range(amount), floor(amount*VALID_SIZE)))
 	valid = data[valid_idx]
 	np.savetxt(os.path.join(FOLDER_NAME, VALID_FILE), valid, delimiter=',', fmt='%s')
 	
@@ -35,7 +36,7 @@ def split_sets(filename):
 	new_amount = np.size(data, 0)
 	
 	# Getting test set from random positions and saving to CSV file
-	test_idx = np.random.randint(low=0, high=(new_amount-1), size=(floor(amount*TEST_SIZE)))
+	test_idx = np.array(sample(range(new_amount), floor(amount*TEST_SIZE)))
 	test = data[test_idx]
 	np.savetxt(os.path.join(FOLDER_NAME, TEST_FILE), test, delimiter=',', fmt='%s')
 	
