@@ -18,9 +18,8 @@ def numpy_and_bias(X, Y, T_set=(-10,10)):
 	X = np.array(X)
 	Y = np.array(Y)
 	X = np.insert(X, 0, 1, axis=1)
-	#T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
-	T = np.array([[0] for x in range(X.shape[1])])
-
+	T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])]
+	
 	return (X,T,Y)
 
 def cost(X, T, Y):
@@ -125,10 +124,8 @@ def sk_regressor(X, Y):
 	    
 	    X is the features matrix
 	    Y is the target array
-	    Both need to be numpy arrays or lists	   
+	    Both need to be numpy arrays	   
 	'''
-	
-	X,garb,Y = numpy_and_bias(X, Y)
 
 	clf = linear_model.SGDRegressor(max_iter = ITER_LIMIT, tol = STEP_LIMIT, alpha = ALPHA)
 	clf.fit(X,Y)
@@ -140,10 +137,8 @@ def normal_equation(X, Y):
 		
 		X is the features matrix
 		Y is the target array
-		Both need to be numpy arrays or lists	
+		Both need to be numpy arrays
 	'''
-	# If the data is not a numpy array. 
-	X,garb,Y = numpy_and_bias(X,Y)
 	
 	# Normal equation: step 1
 	square = X.T.dot(X)
