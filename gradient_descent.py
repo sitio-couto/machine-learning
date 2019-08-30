@@ -18,7 +18,8 @@ def numpy_and_bias(X, Y, T_set=(-10,10)):
 	X = np.array(X)
 	Y = np.array(Y)
 	X = np.insert(X, 0, 1, axis=1)
-	T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])]
+	#T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])]
+	T = None
 	
 	return (X,T,Y)
 
@@ -120,11 +121,11 @@ def stoch_gradient(X, T, Y):
 
 def sk_regressor(X, Y):
 	'''
-		Returns the sklearn model fitted.
-	    
+		Returns the sklearn model fitted
+
 	    X is the features matrix
 	    Y is the target array
-	    Both need to be numpy arrays	   
+	    Both need to be numpy arrays
 	'''
 
 	clf = linear_model.SGDRegressor(max_iter = ITER_LIMIT, tol = STEP_LIMIT, alpha = ALPHA)
