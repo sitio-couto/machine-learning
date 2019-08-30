@@ -1,13 +1,8 @@
 import numpy as np
 from random import randint, sample, shuffle
 from sklearn import linear_model
-import time
-
-# STEP_LIMIT = 10**(-3) # Step size accepted as convergence
-TIME_LIMIT = 5   # Descent limit given in seconds
-EPOCHS_LIMIT = 10**4    # Maximum amount of iterations for the gradient
-MINI_SIZE = 2         # Defines the size for the mini batch
-ALPHA = 0.1          # Learning rate
+from time import time
+from sys import maxsize
 
 def numpy_and_bias(X, Y, T_set=(-10,10)):
 	'''
@@ -28,7 +23,7 @@ def cost(X, T, Y):
     cost = (1/(2*m))*sum((X.dot(T) - Y)**2)
     return cost[0] 
 
-def descent(X, T, Y, type='b'):
+def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.01, mb_size=1):
     '''
         Return the models convergence obtained by the gradient descent.
         It is assumed that the bias is already included and the samples are shuffled.
@@ -45,21 +40,21 @@ def descent(X, T, Y, type='b'):
 
     # Starting descent
     boot_epoch_data(X, T, Y)
-    while (time.time() - start_time) <= TIME_LIMIT:
+    while (time() - start_time) <= t_lim:
 
         # Getting new Thetas
         if (type=='b'):
             delta = batch_gradient(X, T, Y)
         elif (type=='m'):
-            delta = minib_gradient(X, T, Y)
+            delta = minib_gradient(X, T, Y, mb_size)
         else:
             delta = stoch_gradient(X, T, Y)
         
         # Update gradients
-        T = T - ALPHA*delta 
+        T = T - rate*delta 
 
         # Check termination
-        if epochs_count >= EPOCHS_LIMIT: 
+        if epochs_count >= e_lim: 
             return T
         
     print("NOTE: Time limit for descent exceded.")
@@ -75,15 +70,15 @@ def batch_gradient(X, T, Y):
 
     return (gradient_vals).T
 
-def minib_gradient(X, T, Y):
+def minib_gradient(X, T, Y, batch_size):
     ''' Returns the gradient calculate using a portion of the samples'''
     # Get index of first sample for the mini batch
     m = Y.shape[0]
-    b = samples_list[index : index+MINI_SIZE] # Get indexes for mini batch
-    gradient_vals = (1/MINI_SIZE)*(X[b].dot(T) - Y[b]).T.dot(X[b])
+    b = samples_list[index : index+batch_size] # Get indexes for mini batch
+    gradient_vals = (1/batch_size)*(X[b].dot(T) - Y[b]).T.dot(X[b])
 
     # Update epoch global vars
-    update_epoch(X, T, Y, MINI_SIZE, m)
+    update_epoch(X, T, Y, batch_size, m)
 
     return (gradient_vals).T
 
@@ -147,7 +142,7 @@ start_time = 0
 
 def boot_epoch_data(X, T, Y):
     global start_time, epochs_info, samples_list 
-    start_time = time.time() # Set starting time
+    start_time = time() # Set starting time
     epochs_info[0].append(cost(X, T, Y)) # Set starting cost
     epochs_info[1].append(0.0)             # Set starting time
     samples_list = list(range(Y.shape[0])) # Set and shuffle samples index
@@ -164,7 +159,7 @@ def update_epoch(X, T, Y, increment, bound):
     # If epoch was completed
     index = 0             # Reset samples index
     epochs_info[0].append(cost(X, T, Y)) # Adds current epoch cost
-    epochs_info[1].append(time.time() - start_time) # Adds time until epoch is done
+    epochs_info[1].append(time() - start_time) # Adds time until epoch is done
     epochs_count += 1     # Count epoch
     shuffle(samples_list) # Reshuffle samples
     new_epoch = 0         # Lower new epoch flag
@@ -185,15 +180,15 @@ def update_epoch(X, T, Y, increment, bound):
 # Y = np.array([[8],[3],[11]])
 # T = np.array([[2],[4],[6]])
 
-# # Sample 3 => Large generated sample
-# f = 40 # amount of features
-# m = 50 # amount of samples
-# X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
-# Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
-# T = [[i for i in sample(range(-20,20),1)] for x in range(f)]
-# X = np.array(X)
-# Y = np.array(Y)
-# T = np.array(T)
+# Sample 3 => Large generated sample
+f = 40 # amount of features
+m = 50 # amount of samples
+X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
+Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
+T = [[i for i in sample(range(-20,20),1)] for x in range(f+1)]
+X = np.array(X)
+Y = np.array(Y)
+T = np.array(T)
 
 # Add bias to features and generate the first set of T vals
 X,_,Y = numpy_and_bias(X,Y)

@@ -3,13 +3,10 @@ import numpy as np
 norm = import_module("normalization")
 desc = import_module("gradient_descent")
 
-# THE DATASET STILL HAS ITS HEADER (REMOVE BEFORE REGRESSION)
+# Header was already removed
 X, Y = norm.prepare_dataset("Datasets/training.csv")
-# Shuffle samples for a proper stochastic gradient
-X, Y = desc.shuffle_samples(X, Y)
-# Cast and add bias
+# Cast, add bias and randomize initial Thetas
 X, T, Y = desc.numpy_and_bias(X, Y)
-
 # Run
 T = desc.normal_equation(X,Y)
 #T = desc.descent(X, T, Y)
