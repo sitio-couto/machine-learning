@@ -2,7 +2,6 @@ import numpy as np
 from random import randint, sample, shuffle
 from sklearn import linear_model
 from time import time
-from sys import maxsize
 
 def numpy_and_bias(X, Y, T_set=(-10,10)):
 	'''
@@ -61,7 +60,7 @@ def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.01, mb_size=1):
     return T
 
 def batch_gradient(X, T, Y):
-    ''' Returns the gradiente calculated using all samples.'''
+    ''' Returns the gradient calculated using all samples.'''
     m = Y.shape[0]
     gradient_vals = (1/m)*(X.dot(T) - Y).T.dot(X)
    
@@ -102,7 +101,7 @@ def sk_regressor(X, Y):
 	    Both need to be numpy arrays
 	'''
 
-	clf = linear_model.SGDRegressor(max_iter = ITER_LIMIT, tol = STEP_LIMIT, alpha = ALPHA)
+	clf = linear_model.SGDRegressor(max_iter = EPOCHS_LIMIT, tol = STEP_LIMIT, alpha = ALPHA)
 	clf.fit(X,Y)
 	return clf
 
@@ -126,6 +125,14 @@ def normal_equation(X, Y):
 	# Rest of equation
 	theta = ((np.linalg.inv(square)).dot(X.T)).dot(Y)
 	return theta
+
+def predict(X, T):
+	''' Predict function for descent and normal equation
+		Receives data and coefs.
+		Returns predicted value.
+	'''
+	return X.dot(T)
+	
 
 ### global epoch variables ####
 # References the current sample(s) used, ensuring that gradients
@@ -191,10 +198,10 @@ Y = np.array(Y)
 T = np.array(T)
 
 # Add bias to features and generate the first set of T vals
-X,_,Y = numpy_and_bias(X,Y)
+#X,_,Y = numpy_and_bias(X,Y)
 
-T = descent(X, T, Y, type='s')
-print(T)
-print("Cost =>",cost(X,T,Y))
-print(epochs_count)
-print(epochs_info[0][0],epochs_info[0][-1])
+#T = descent(X, T, Y, type='s')
+#print(T)
+#print("Cost =>",cost(X,T,Y))
+#print(epochs_count)
+#print(epochs_info[0][0],epochs_info[0][-1])
