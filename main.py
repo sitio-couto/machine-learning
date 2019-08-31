@@ -1,10 +1,11 @@
 from importlib import import_module
 from random import randint
 import numpy as np
-model = import_module("first_model") 
-norm = import_module("normalization")
-desc = import_module("gradient_descent")
-graph = import_module("visualization")
+
+import first_model as model
+import normalization as norm
+import gradient_descent as desc
+import visualization as graph
 
 ### Getting Training Set ###
 # Returns the data without the header
