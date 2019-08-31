@@ -6,10 +6,10 @@ import numpy as np
 import re
 
 def stats(data):
-	''' Transforms data to pandas dataframe and gets stats
-	'''
-	pd.DataFrame(data)
-	print(data.describe())
+    ''' Transforms data to pandas dataframe and gets stats
+    '''
+    pd.DataFrame(data)
+    print(data.describe())
 
 def date_split(string):
     ''' Read date-time in "yyyy-mm-dd hh:mm:ss" and cast to int.
@@ -47,6 +47,7 @@ def avg_traffic_hour_daily(data):
     plt.title("Análise do tráfego por hora")
     plt.xlabel("Horas do dia (00h-24h)")
     plt.ylabel("Média diária de tráfego")
+    print('Ploting')
     plt.grid()
     plt.show()
 
@@ -101,7 +102,7 @@ def learning_curve(X, Y, Xv, Yv, knowledge, test):
     train = []
     valid = []
     T = knowledge
-    step = int(max(1, floor(len(T)/100)))
+    step = int(max(1, np.floor(len(T)/100)))
     exp = range(0, len(T), step)
 
     for i in exp:
@@ -114,6 +115,7 @@ def learning_curve(X, Y, Xv, Yv, knowledge, test):
     plt.xlabel('Experience (Epochs)')
     plt.ylabel('Learning (x10^6)')
     plt.title('Learning Curve')
+    plt.grid()
     plt.show()
     return 
 

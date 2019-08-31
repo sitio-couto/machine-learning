@@ -1,23 +1,20 @@
 import numpy as np
 from random import randint, sample, shuffle
-from importlib import import_module
 from sklearn import linear_model
 from time import time
 
-graph = import_module("visualization")
-
 def numpy_and_bias(X, Y, T_set=(-10,10)):
-	'''
-		Transforms lists for X and Y into numpy arrays.
-		Adds bias to feature matrix (X)
-	'''
-	
-	X = np.array(X)
-	Y = np.array(Y)
-	X = np.insert(X, 0, 1, axis=1)
-	T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
-	
-	return (X,T,Y)
+    '''
+        Transforms lists for X and Y into numpy arrays.
+        Adds bias to feature matrix (X)
+    '''
+    
+    X = np.array(X)
+    Y = np.array(Y)
+    X = np.insert(X, 0, 1, axis=1)
+    T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
+    
+    return (X,T,Y)
 
 def cost(X, T, Y):
     '''Returns the cost function value for the given set of variables.'''
@@ -96,46 +93,46 @@ def stoch_gradient(X, T, Y):
     return gradient_vals
 
 def sk_regressor(X, Y, t_lim=30, s_lim=10**-3, e_lim=10**4, rate=0.01):
-	'''
-		Returns the sklearn model fitted
+    '''
+        Returns the sklearn model fitted
 
-	    X is the features matrix
-	    Y is the target array
-	    Both need to be numpy arrays
-	'''
+        X is the features matrix
+        Y is the target array
+        Both need to be numpy arrays
+    '''
 
-	clf = linear_model.SGDRegressor(max_iter = e_lim, tol = s_lim, alpha = rate)
-	clf.fit(X,Y)
-	return clf
+    clf = linear_model.SGDRegressor(max_iter = e_lim, tol = s_lim, alpha = rate)
+    clf.fit(X,Y)
+    return clf
 
 def normal_equation(X, Y):
-	'''
-		Returns the analytical solution via normal equation.
-		
-		X is the features matrix
-		Y is the target array
-		Both need to be numpy arrays
-	'''
-	
-	# Normal equation: step 1
-	square = X.T.dot(X)
-	
-	# Check if matrix is invertible
-	if np.linalg.det(square) == 0:
-		print("Matrix not invertible! Cannot be solved by normal equation.")
-		return None
-	
-	# Rest of equation
-	theta = ((np.linalg.inv(square)).dot(X.T)).dot(Y)
-	return theta
+    '''
+        Returns the analytical solution via normal equation.
+        
+        X is the features matrix
+        Y is the target array
+        Both need to be numpy arrays
+    '''
+    
+    # Normal equation: step 1
+    square = X.T.dot(X)
+    
+    # Check if matrix is invertible
+    if np.linalg.det(square) == 0:
+        print("Matrix not invertible! Cannot be solved by normal equation.")
+        return None
+    
+    # Rest of equation
+    theta = ((np.linalg.inv(square)).dot(X.T)).dot(Y)
+    return theta
 
 def predict(X, T):
-	''' Predict function for descent and normal equation
-		Receives data and coefs.
-		Returns predicted value.
-	'''
-	return X.dot(T)
-	
+    ''' Predict function for descent and normal equation
+        Receives data and coefs.
+        Returns predicted value.
+    '''
+    return X.dot(T)
+    
 
 ### global epoch variables ####
 # References the current sample(s) used, ensuring that gradients
