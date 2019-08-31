@@ -132,7 +132,13 @@ def predict(X, T):
         Returns predicted value.
     '''
     return X.dot(T)
-    
+
+def score(X, T, Y):
+    Y_pred = predict(X, T)
+
+    v = ((Y - Y.mean()) ** 2).sum()
+    u = ((Y - Y_pred) ** 2).sum() 
+    return (1 - u/v)
 
 ### global epoch variables ####
 # References the current sample(s) used, ensuring that gradients
