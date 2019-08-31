@@ -21,7 +21,7 @@ def normalize_data(data, choice=1, features=[1,2,3,4]):
 
     # Gathering necessary data
     features_list = [[d[f] for d in data] for f in features]
-    for fl in  features_list:
+    for fl in features_list:
         means.append(np.mean(fl))
         maxs.append(max(fl))
         mins.append(min(fl))
