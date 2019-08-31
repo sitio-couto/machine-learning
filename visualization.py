@@ -1,6 +1,13 @@
 import matplotlib.pyplot as plt 
-from numpy import array as arr
+import pandas as pd
+import numpy as np
 import re
+
+def stats(data):
+	''' Transforms data to pandas dataframe and gets stats
+	'''
+	pd.DataFrame(data)
+	print(data.describe())
 
 def date_split(string):
     ''' Read date-time in "yyyy-mm-dd hh:mm:ss" and cast to int.
@@ -30,7 +37,7 @@ def avg_traffic_hour_daily(data):
         hour, day, _, _ = date_split(x[6]).values()
         if (day != curr_day):
             curr_day = day
-            traffic_hour.append(arr([0]*24))
+            traffic_hour.append(np.array([0]*24))
         traffic_hour[-1][hour] = x[-1]
 
     avg = sum(traffic_hour)/len(traffic_hour)
@@ -38,6 +45,7 @@ def avg_traffic_hour_daily(data):
     plt.title("Análise do tráfego por hora")
     plt.xlabel("Horas do dia (00h-24h)")
     plt.ylabel("Média diária de tráfego")
+    plt.grid()
     plt.show()
 
     return
@@ -56,11 +64,11 @@ def avg_traffic_per_weather(data):
 
     counts = [x[0] if x[0]>0 else 1 for x in desc_main.values()]
     sums = [x[1] for x in desc_main.values()]
-    desc_main_avg = arr(sums)/arr(counts)
+    desc_main_avg = np.array(sums)/np.array(counts)
 
     counts = [x[0] if x[0]>0 else 1  for x in desc.values()]
     sums = [x[1] for x in desc.values()]
-    desc_avg = arr(sums)/arr(counts)
+    desc_avg = np.array(sums)/np.array(counts)
     
     a = plt.figure(1)
     plt.plot(list(desc.keys()), desc_avg)
@@ -70,6 +78,7 @@ def avg_traffic_per_weather(data):
     plt.title("Análise do tráfego por descrição específica do clima")
     plt.xlabel("Descrições específicas do clima")
     plt.ylabel("Média diária de tráfego")
+    plt.grid()
     
     b = plt.figure(2)
     plt.plot(list(desc_main.keys()), desc_main_avg)
@@ -77,6 +86,7 @@ def avg_traffic_per_weather(data):
     plt.xlabel("Descrições gerais do clima")
     plt.ylabel("Média diária de tráfego")
   
+    plt.grid()
     plt.show()
     input()
     

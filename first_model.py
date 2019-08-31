@@ -103,7 +103,7 @@ def process_input(data):
 
     return data_frame
 
-def prepare_dataset(train_set_name):
+def prepare_dataset(set_name):
     ''' Reads and prepares a dataset for regression.
     
         Returns:
@@ -111,7 +111,7 @@ def prepare_dataset(train_set_name):
             Y (array list): results matrix with label.
     '''
 
-    datafile = open(train_set_name)
+    datafile = open(set_name)
     data = list(map(lambda x : x.split(","), datafile.readlines()))
 
     data = process_input(data)

@@ -205,3 +205,4 @@ T = np.array(T)
 #print("Cost =>",cost(X,T,Y))
 #print(epochs_count)
 #print(epochs_info[0][0],epochs_info[0][-1])
+
