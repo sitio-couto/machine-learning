@@ -92,7 +92,7 @@ def stoch_gradient(X, T, Y):
 
     return gradient_vals
 
-def sk_regressor(X, Y):
+def sk_regressor(X, Y, t_lim=30, s_lim=10**-3, e_lim=10**4, rate=0.01):
 	'''
 		Returns the sklearn model fitted
 
@@ -101,7 +101,7 @@ def sk_regressor(X, Y):
 	    Both need to be numpy arrays
 	'''
 
-	clf = linear_model.SGDRegressor(max_iter = EPOCHS_LIMIT, tol = STEP_LIMIT, alpha = ALPHA)
+	clf = linear_model.SGDRegressor(max_iter = e_lim, tol = s_lim, alpha = rate)
 	clf.fit(X,Y)
 	return clf
 
