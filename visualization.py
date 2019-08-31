@@ -100,7 +100,7 @@ def learning_curve(X, Y, Xv, Yv, knowledge, test):
     train = []
     valid = []
     T = knowledge
-    step = int(max(1, floor(len(T)/100)))
+    step = int(max(1, np.floor(len(T)/100)))
     exp = range(0, len(T), step)
 
     for i in exp:
