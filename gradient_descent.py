@@ -1,7 +1,10 @@
 import numpy as np
 from random import randint, sample, shuffle
+from importlib import import_module
 from sklearn import linear_model
 from time import time
+
+graph = import_module("visualization")
 
 def numpy_and_bias(X, Y, T_set=(-10,10)):
 	'''
@@ -38,7 +41,7 @@ def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.01, mb_size=1):
     '''
 
     # Starting descent
-    boot_epoch_data(X, T, Y)
+    boot_epoch_data(T, Y.shape[0])
     while (time() - start_time) <= t_lim:
 
         # Getting new Thetas
@@ -65,7 +68,7 @@ def batch_gradient(X, T, Y):
     gradient_vals = (1/m)*(X.dot(T) - Y).T.dot(X)
    
     # Update epoch global vars
-    update_epoch(X, T, Y, m, m)
+    update_epoch(T, m, m)
 
     return (gradient_vals).T
 
@@ -77,7 +80,7 @@ def minib_gradient(X, T, Y, batch_size):
     gradient_vals = (1/batch_size)*(X[b].dot(T) - Y[b]).T.dot(X[b])
 
     # Update epoch global vars
-    update_epoch(X, T, Y, batch_size, m)
+    update_epoch(T, batch_size, m)
 
     return (gradient_vals).T
 
@@ -88,7 +91,7 @@ def stoch_gradient(X, T, Y):
     gradient_vals = (X[i].dot(T) - Y[i])*(X[i]).T
 
     # Update epoch global vars
-    update_epoch(X, T, Y, 1, m)
+    update_epoch(T, 1, m)
 
     return gradient_vals
 
@@ -147,15 +150,15 @@ epochs_count = 0
 epochs_info = [[],[]] # Time and Cost per Epoch 
 start_time = 0
 
-def boot_epoch_data(X, T, Y):
+def boot_epoch_data(T, qnt_samples):
     global start_time, epochs_info, samples_list 
     start_time = time() # Set starting time
-    epochs_info[0].append(cost(X, T, Y)) # Set starting cost
-    epochs_info[1].append(0.0)             # Set starting time
-    samples_list = list(range(Y.shape[0])) # Set and shuffle samples index
+    epochs_info[0].append(T[:]) # Set starting cost
+    epochs_info[1].append(0.0)  # Set starting time
+    samples_list = list(range(qnt_samples)) # Set and shuffle samples index
     shuffle(samples_list)
 
-def update_epoch(X, T, Y, increment, bound):
+def update_epoch(T, increment, bound):
     '''Update epochs global variables when a epoch is completed'''
     global epochs_info, epochs_count, index, samples_list, new_epoch 
     
@@ -165,7 +168,7 @@ def update_epoch(X, T, Y, increment, bound):
     
     # If epoch was completed
     index = 0             # Reset samples index
-    epochs_info[0].append(cost(X, T, Y)) # Adds current epoch cost
+    epochs_info[0].append(T) # Adds current epoch cost
     epochs_info[1].append(time() - start_time) # Adds time until epoch is done
     epochs_count += 1     # Count epoch
     shuffle(samples_list) # Reshuffle samples
@@ -187,15 +190,15 @@ def update_epoch(X, T, Y, increment, bound):
 # Y = np.array([[8],[3],[11]])
 # T = np.array([[2],[4],[6]])
 
-# Sample 3 => Large generated sample
-f = 40 # amount of features
-m = 50 # amount of samples
-X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
-Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
-T = [[i for i in sample(range(-20,20),1)] for x in range(f+1)]
-X = np.array(X)
-Y = np.array(Y)
-T = np.array(T)
+# # Sample 3 => Large generated sample
+# f = 40 # amount of features
+# m = 50 # amount of samples
+# X = [[i*0.01 for i in sample(range(-100,100),f)] for x in range(m)]
+# Y = [[i for i in sample(range(-100,100),1)] for x in range(m)]
+# T = [[i for i in sample(range(-20,20),1)] for x in range(f+1)]
+# X = np.array(X)
+# Y = np.array(Y)
+# T = np.array(T)
 
 # Add bias to features and generate the first set of T vals
 #X,_,Y = numpy_and_bias(X,Y)

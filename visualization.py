@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt 
-from numpy import array as arr
+# from matplotlib import show, draw
+from numpy import array, floor
 import re
 
 def date_split(string):
@@ -30,7 +31,7 @@ def avg_traffic_hour_daily(data):
         hour, day, _, _ = date_split(x[6]).values()
         if (day != curr_day):
             curr_day = day
-            traffic_hour.append(arr([0]*24))
+            traffic_hour.append(array([0]*24))
         traffic_hour[-1][hour] = x[-1]
 
     avg = sum(traffic_hour)/len(traffic_hour)
@@ -38,6 +39,7 @@ def avg_traffic_hour_daily(data):
     plt.title("Análise do tráfego por hora")
     plt.xlabel("Horas do dia (00h-24h)")
     plt.ylabel("Média diária de tráfego")
+    print('Ploting')
     plt.show()
 
     return
@@ -56,11 +58,11 @@ def avg_traffic_per_weather(data):
 
     counts = [x[0] if x[0]>0 else 1 for x in desc_main.values()]
     sums = [x[1] for x in desc_main.values()]
-    desc_main_avg = arr(sums)/arr(counts)
+    desc_main_avg = array(sums)/array(counts)
 
     counts = [x[0] if x[0]>0 else 1  for x in desc.values()]
     sums = [x[1] for x in desc.values()]
-    desc_avg = arr(sums)/arr(counts)
+    desc_avg = array(sums)/array(counts)
     
     a = plt.figure(1)
     plt.plot(list(desc.keys()), desc_avg)
@@ -77,7 +79,29 @@ def avg_traffic_per_weather(data):
     plt.xlabel("Descrições gerais do clima")
     plt.ylabel("Média diária de tráfego")
   
-    plt.show()
+    plt.draw()
     input()
     
     return
+
+
+#### MODEL ANALYSIS ####
+
+def learning_curve(X, Y, Xv, Yv, knowledge, test):
+    train = []
+    valid = []
+    T = knowledge
+    step = int(max(1, floor(len(T)/100)))
+    exp = range(0, len(T), step)
+
+    for i in exp:
+        train.append(test(*(X,T[i],Y))/1000)
+        valid.append(test(*(Xv,T[i],Yv))/1000)
+
+    plt.plot(exp, train, label='Training')
+    plt.plot(exp, valid, label='Validation')
+    plt.xlabel('Experience')
+    plt.ylabel('Learning (x10^3)')
+    plt.title('Learning Curve')
+    plt.show()
+    return 
