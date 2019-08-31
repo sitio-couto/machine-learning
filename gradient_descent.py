@@ -54,7 +54,7 @@ def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.01, mb_size=1):
         
         # Update gradients
         T = T - rate*delta 
-
+        
         # Check termination
         if epochs_count >= e_lim: 
             return T
@@ -151,10 +151,15 @@ epochs_info = [[],[]] # Time and Cost per Epoch
 start_time = 0
 
 def boot_epoch_data(T, qnt_samples):
-    global start_time, epochs_info, samples_list 
+    global index, new_epoch, epochs_count, start_time, epochs_info, samples_list 
+   
+    # Reset values
+    index = 0
+    new_epoch = 0
+    epochs_count = 0
     start_time = time() # Set starting time
-    epochs_info[0].append(T[:]) # Set starting cost
-    epochs_info[1].append(0.0)  # Set starting time
+    epochs_info[0] = [T] # Set starting cost
+    epochs_info[1] = [0.0]  # Set starting time
     samples_list = list(range(qnt_samples)) # Set and shuffle samples index
     shuffle(samples_list)
 
