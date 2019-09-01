@@ -69,6 +69,6 @@ def process_input(data):
         data[i] = np.where(data['weather_main'] == i, 1, 0)
     
     data.drop(labels=['weather_description', 'weather_main'], axis=1, inplace=True)
-    print(data)
+
     return data
     
