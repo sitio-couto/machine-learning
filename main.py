@@ -1,7 +1,7 @@
 from random import randint
 import numpy as np
 
-import first_model as model
+import new_model as model
 import normalization as norm
 import gradient_descent as desc
 import visualization as graph
@@ -13,6 +13,7 @@ X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
 X = norm.normalize_data(X, choice=1, features=feat_list)
 # Cast, add bias and randomize initial Thetas
 X, T, Y = desc.numpy_and_bias(X, Y)
+print(Y)
 
 # Validation set
 # features to be normalized are the same
@@ -20,9 +21,9 @@ X_val, Y_val, _ = model.prepare_dataset("Datasets/validate.csv")
 X_val = norm.normalize_data(X_val, choice=1, features=feat_list)
 X_val, _, Y_val = desc.numpy_and_bias(X_val, Y_val)
 
-T = desc.descent(X, T, Y, t_lim=180, e_lim=10000, type="s")
-print("TRAIN SCORE=>", desc.score(X, T, Y))
-print("VALID SCORE=>", desc.score(X_val, T, Y_val))
+#T = desc.descent(X, T, Y, t_lim=180, e_lim=10000, type="s")
+#print("TRAIN SCORE=>", desc.score(X, T, Y))
+#print("VALID SCORE=>", desc.score(X_val, T, Y_val))
 # ### FITTING EVALUATION ###
 # T = desc.descent(X, T, Y, t_lim=30, e_lim=1000)
 # print(desc.epochs_count)
@@ -36,19 +37,19 @@ print("VALID SCORE=>", desc.score(X_val, T, Y_val))
 
 # ### SKLEARN ###
 # # Train coeficients
-# Y = np.ravel(Y)
-# clf = desc.sk_regressor(X, Y)
+Y = np.ravel(Y)
+clf = desc.sk_regressor(X, Y)
 # # Training results
-# print("Training Score =>", clf.score(X,Y))
+print("Training Score =>", clf.score(X,Y))
 
 # # Validate
-# Y_val = np.ravel(Y_val)
-# print("Validation Score=>", clf.score(X_val,Y_val))
+Y_val = np.ravel(Y_val)
+print("Validation Score=>", clf.score(X_val,Y_val))
 
 # # Check some random predictions accuracy
-# for i in range(20):
-#     x = randint(0,Y_val.shape[0])
-#     print(int(clf.predict(X_val[[x]])), "=>", int(Y_val[[x]]))
+for i in range(20):
+    x = randint(0,Y_val.shape[0])
+    print(int(clf.predict(X_val[[x]])), "=>", int(Y_val[[x]]))
 
 
 # ### TESTING GRADIENTS ###

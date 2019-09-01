@@ -1,3 +1,4 @@
+holiday,temp,rain_1h,snow_1h,clouds_all,weather_main,weather_description,date_time,traffic_volume
 None,296.76,0.0,0.0,75,Clouds,broken clouds,2018-08-20 13:00:00,4690
 None,293.26,0.0,0.0,20,Clouds,few clouds,2016-07-26 05:00:00,2889
 None,285.08,0.0,0.0,1,Clear,sky is clear,2016-11-06 22:00:00,1308

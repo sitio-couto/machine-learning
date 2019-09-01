@@ -22,7 +22,7 @@ def cost(X, T, Y):
     cost = (1/(2*m))*sum((X.dot(T) - Y)**2)
     return cost[0] 
 
-def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.01, mb_size=1):
+def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.001, mb_size=5):
     '''
         Return the models convergence obtained by the gradient descent.
         It is assumed that the bias is already included and the samples are shuffled.
@@ -92,7 +92,7 @@ def stoch_gradient(X, T, Y):
 
     return gradient_vals
 
-def sk_regressor(X, Y, t_lim=30, s_lim=10**-3, e_lim=10**4, rate=0.01):
+def sk_regressor(X, Y, t_lim=30, s_lim=10**-3, e_lim=10**4, rate=0.001):
     '''
         Returns the sklearn model fitted
 

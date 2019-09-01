@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt 
-# from matplotlib import show, draw
-from numpy import array, floor
 import pandas as pd
 import numpy as np
 import re
 
-def stats(data):
-    ''' Transforms data to pandas dataframe and gets stats
+def stats_hist(data):
+    ''' Transforms data to pandas dataframe and gets stats/histogram
     '''
     pd.DataFrame(data)
     print(data.describe())
+    hist=data.hist(bins=50)
+    plt.show()
 
 def date_split(string):
     ''' Read date-time in "yyyy-mm-dd hh:mm:ss" and cast to int.
@@ -20,7 +20,6 @@ def date_split(string):
         Returns:
             (dictionary): contains date-time info indexed by initials.
     '''
-
     date = re.split("-|:| ", string)
     year = int(date[0])
     month = int(date[1])
@@ -44,6 +43,7 @@ def avg_traffic_hour_daily(data):
 
     avg = sum(traffic_hour)/len(traffic_hour)
     plt.plot(range(0,24), avg)
+    plt.xticks(range(0,24))
     plt.title("Análise do tráfego por hora")
     plt.xlabel("Horas do dia (00h-24h)")
     plt.ylabel("Média diária de tráfego")

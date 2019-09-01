@@ -1,3 +1,4 @@
+holiday,temp,rain_1h,snow_1h,clouds_all,weather_main,weather_description,date_time,traffic_volume
 None,303.15,0.0,0.0,20,Clouds,few clouds,2017-08-01 17:00:00,6136
 None,290.96,0.51,0.0,88,Rain,light rain,2013-09-11 02:00:00,286
 None,285.91,0.0,0.0,1,Mist,mist,2016-05-30 05:00:00,488
