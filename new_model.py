@@ -42,11 +42,13 @@ def process_input(data):
     
     data.drop(labels='date_time', axis=1, inplace=True)
     
-    # Get peak and commercial times
+    # Get peak, commercial and night times
     peak = list(range(15,18))
     comm = list(range(6, 19))
+    night= list(range(0,5))
     data['peak'] = np.where((data['hour'] >= peak[0]) & (data['hour'] <= peak[-1]), 1, 0)
     data['commercial'] = np.where((data['hour'] >= comm[0]) & (data['hour'] <= comm[-1]), 1, 0)
+    data['night'] = np.where((data['hour'] >= night[0]) & (data['hour'] <= night[-1]), 1, 0)
     
     # Weather variables
     weather_main = ['Clear', 'Clouds', 'Rain', 'Drizzle', 'Fog', 'Mist', 'Haze', 'Thunderstorm', 'Snow', 'Smoke', 'Squall']

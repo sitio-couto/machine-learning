@@ -47,7 +47,31 @@ def avg_traffic_hour_daily(data):
     plt.title("Análise do tráfego por hora")
     plt.xlabel("Horas do dia (00h-24h)")
     plt.ylabel("Média diária de tráfego")
-    print('Ploting')
+    print('Plotting')
+    plt.grid()
+    plt.show()
+
+    return
+
+def avg_traffic_day_weekly(data):
+    # NEEDS HEADER
+    # OBS: there are duplicated time stamps to separate more than one
+    # enviromental condition (p.e. if its foggy and cloudy there will be duplicates)
+    traffic_day = []
+    data = pd.DataFrame(data)
+    data['date_time'] = pd.to_datetime(data['date_time'])
+    data['weekday'] = data['date_time'].dt.weekday
+    
+    for i in range(0,7):
+        dt = data.loc[data['date_time'].dt.weekday == i]
+        traffic_day.append(dt['traffic_volume'].mean())
+        
+    plt.plot(range(0,7), traffic_day)
+    plt.xticks(range(0,7))
+    plt.title("Análise do tráfego por dia")
+    plt.xlabel("Dias da semana (Segunda a Domingo)")
+    plt.ylabel("Média semanal de tráfego")
+    print('Plotting')
     plt.grid()
     plt.show()
 

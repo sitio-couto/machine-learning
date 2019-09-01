@@ -24,13 +24,13 @@ X_val, _, Y_val = desc.numpy_and_bias(X_val, Y_val)
 #print("TRAIN SCORE=>", desc.score(X, T, Y))
 #print("VALID SCORE=>", desc.score(X_val, T, Y_val))
 # ### FITTING EVALUATION ###
-# T = desc.descent(X, T, Y, t_lim=30, e_lim=1000)
-# print(desc.epochs_count)
+#T = desc.descent(X, T, Y, t_lim=30, e_lim=1000)
+#print(desc.epochs_count)
 
 # # Check some random predictions accuracy
-# for i in range(20):
-#     x = randint(0,Y_val.shape[0])
-#     print(int(desc.predict(X_val[[x]], T)), "=>", int(Y_val[[x]]))
+#for i in range(20):
+#    x = randint(0,Y_val.shape[0])
+#    print(int(desc.predict(X_val[[x]], T)), "=>", int(Y_val[[x]]))
 
 # graph.learning_curve(X, Y, X_val, Y_val, desc.epochs_info[0], desc.cost)
 
@@ -50,6 +50,18 @@ for i in range(20):
     x = randint(0,Y_val.shape[0])
     print(int(clf.predict(X_val[[x]])), "=>", int(Y_val[[x]]))
 
+# ### NORMAL EQUATION ###
+T = desc.normal_equation(X,Y)
+# # Results
+#print("Train Normal Score =>", desc.score(X,T,Y))
+
+# # Validate
+#print("Validation Normal Score =>", desc.score(X_val, T, Y_val))
+
+# # Check some random predictions accuracy
+#for i in range(20):
+#    x = randint(0,Y_val.shape[0])
+#    print(int(desc.predict(X_val[[x]], T)), "=>", int(Y_val[[x]]))
 
 # ### TESTING GRADIENTS ###
 # # Returns the data without the header
