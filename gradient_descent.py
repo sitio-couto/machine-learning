@@ -13,6 +13,8 @@ def numpy_and_bias(X, Y, T_set=(-10,10)):
     Y = np.array(Y)
     X = np.insert(X, 0, 1, axis=1)
     T = np.array([[randint(-T_set[0],T_set[1])] for x in range(X.shape[1])])
+    X = X.astype(float)
+    Y = Y.astype(float)
     
     return (X,T,Y)
 

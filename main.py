@@ -7,6 +7,7 @@ import gradient_descent as desc
 import visualization as graph
 
 # ### Getting Training Set ###
+<<<<<<< HEAD
 # # Returns the data without the header
 # X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
 # # Normalize the features pointed by the received model
@@ -26,6 +27,24 @@ import visualization as graph
 # print("VALID SCORE=>", desc.score(X_val, T, Y_val))
 # print("VALID SCORE=>", desc.cost(X_val, T, Y_val))
 # exit()
+=======
+# Returns the data split between features and target.
+X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
+# Normalize the features pointed by the received model
+X = norm.normalize_data(X, choice=1, features=feat_list)
+# Cast, add bias and randomize initial Thetas
+X, T, Y = desc.numpy_and_bias(X, Y)
+
+# Validation set
+# features to be normalized are the same
+X_val, Y_val, _ = model.prepare_dataset("Datasets/validate.csv")
+X_val = norm.normalize_data(X_val, choice=1, features=feat_list)
+X_val, _, Y_val = desc.numpy_and_bias(X_val, Y_val)
+
+#T = desc.descent(X, T, Y, t_lim=180, e_lim=10000, type="s")
+#print("TRAIN SCORE=>", desc.score(X, T, Y))
+#print("VALID SCORE=>", desc.score(X_val, T, Y_val))
+>>>>>>> 298826db2c005778aefbf4b6521d13c11a278650
 # ### FITTING EVALUATION ###
 #T = desc.descent(X, T, Y, t_lim=30, e_lim=1000)
 #print(desc.epochs_count)
