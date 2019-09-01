@@ -13,7 +13,6 @@ X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
 X = norm.normalize_data(X, choice=1, features=feat_list)
 # Cast, add bias and randomize initial Thetas
 X, T, Y = desc.numpy_and_bias(X, Y)
-print(Y)
 
 # Validation set
 # features to be normalized are the same

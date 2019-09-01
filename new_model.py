@@ -12,7 +12,10 @@ def prepare_dataset(set_path, type='train'):
     Y = df['traffic_volume'].T
     X = df.drop(axis=1, labels='traffic_volume')
     
-    return X.values,Y.values,[1,2,3,4]
+    feat_norm = ['temp', 'rain_1h', 'snow_1h', 'clouds_all', 'hour', 'day', 'month', 'year']
+    feat_idx = [X.columns.get_loc(c) for c in feat_norm]
+    
+    return X.values,Y.values,feat_idx
 
 def process_input(data):
     ''' Remove and re-format input data.
@@ -35,7 +38,7 @@ def process_input(data):
     
     # Get weekend
     data['weekday'] = data['date_time'].dt.weekday
-    data['weekday'] = np.where((data['weekday']) == 5 | (data['weekday'] == 6), 1, 0)
+    data['weekday'] = np.where((data['weekday']) == 5 | (data['weekday'] == 6), 0, 1)
     
     data.drop(labels='date_time', axis=1, inplace=True)
     
