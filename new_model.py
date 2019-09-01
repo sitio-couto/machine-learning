@@ -9,13 +9,15 @@ def prepare_dataset(set_path, type='train'):
     # Cleaning
     df = process_input(df)
     
-    Y = df['traffic_volume'].T
+    Y = df['traffic_volume'].values
+    Y = Y.reshape(len(Y),1)
+    
     X = df.drop(axis=1, labels='traffic_volume')
     
     feat_norm = ['temp', 'rain_1h', 'snow_1h', 'clouds_all', 'hour', 'day', 'month', 'year']
     feat_idx = [X.columns.get_loc(c) for c in feat_norm]
     
-    return X.values,Y.values,feat_idx
+    return X.values,Y,feat_idx
 
 def process_input(data):
     ''' Remove and re-format input data.
