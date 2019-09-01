@@ -59,9 +59,9 @@ T = desc.normal_equation(X,Y)
 #print("Validation Normal Score =>", desc.score(X_val, T, Y_val))
 
 # # Check some random predictions accuracy
-#for i in range(20):
-#    x = randint(0,Y_val.shape[0])
-#    print(int(desc.predict(X_val[[x]], T)), "=>", int(Y_val[[x]]))
+for i in range(20):
+    x = randint(0,Y_val.shape[0])
+    print(int(desc.predict(X_val[[x]], T)), "=>", int(Y_val[[x]]))
 
 # ### TESTING GRADIENTS ###
 # # Returns the data without the header
