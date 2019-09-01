@@ -159,7 +159,38 @@ def gradient_comparison(batch, stoch, minib):
     plt.show()
     return 
 
-def gradient_comparison():
+def gradient_comparison(alpha):
+    
+    X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
+    X = norm.normalize_data(X, choice=1, features=feat_list)
+    X, T, Y = desc.numpy_and_bias(X, Y)
+
+    desc.descent(X, T, Y, t_lim=30, e_lim=10000, rate=alpha)
+    batch = []
+    batch.append([desc.cost(X, i, Y)/10**6 for i in desc.epochs_info[0]])
+    batch.append(desc.epochs_info[1][:])
+
+    desc.descent(X, T, Y, t_lim=30, e_lim=10000, type='m', rate=alpha, mb_size=int(0.05*Y.shape[0]))
+    minib = []
+    minib.append([desc.cost(X, i, Y)/10**6 for i in desc.epochs_info[0]])
+    minib.append(desc.epochs_info[1][:])
+
+    desc.descent(X, T, Y, t_lim=30, e_lim=10000, rate=alpha, type='s')
+    stoch = []
+    stoch.append([desc.cost(X, i, Y)/10**6 for i in desc.epochs_info[0]])
+    stoch.append(desc.epochs_info[1][:])
+   
+    plt.plot(batch[1], batch[0], label='batch ('+str(len(batch[0])-1)+' Epochs)')
+    plt.plot(stoch[1], stoch[0], label='stochastic ('+str(len(stoch[0])-1)+' Epochs)')
+    plt.plot(minib[1], minib[0], label='mini batch 2% ('+str(len(minib[0])-1)+' Epochs)')
+    plt.legend()
+    plt.xlabel('Time (s)')
+    plt.ylabel('Cost (x10^6)')
+    plt.title('Gradients Curve (alpha = '+str(alpha)+')')
+    plt.show()
+    return 
+
+def best_alpha_gradient_comparison():
     
     X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
     X = norm.normalize_data(X, choice=1, features=feat_list)
@@ -186,7 +217,7 @@ def gradient_comparison():
     plt.legend()
     plt.xlabel('Time (s)')
     plt.ylabel('Cost (x10^6)')
-    plt.title('Gradients Curve (alpha = '+str(alpha)+')')
+    plt.title('Gradients Curve')
     plt.show()
     return 
 
@@ -218,4 +249,4 @@ def norm_check(feat_list):
 ##### CALLING AREA #####
 
 # alpha_comparison('s',"Stochastic Learning Rates", [0.1, 0.01, 0.001,0.0001])
-gradient_comparison()
+gradient_comparison(0.01)
