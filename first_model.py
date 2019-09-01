@@ -33,6 +33,7 @@ def process_input(data):
     # Features list
     new_head = ['holiday', 'temp', 'rain_1h', 'snow_1h', 'clouds_all', 'thunderstorm with light rain', 'shower snow', 'thunderstorm with heavy rain', 'drizzle', 'light intensity shower rain', 'proximity shower rain', 'thunderstorm', 'heavy snow', 'proximity thunderstorm with rain', 'thunderstorm with rain', 'proximity thunderstorm', 'squalls', 'few clouds', 'light rain and snow', 'smoke', 'scattered clouds', 'thunderstorm with light drizzle', 'sky is clear', 'very heavy rain', 'light intensity drizzle', 'broken clouds', 'snow', 'heavy intensity rain', 'sleet', 'thunderstorm with drizzle', 'heavy intensity drizzle', 'light snow', 'light shower snow', 'moderate rain', 'haze', 'shower drizzle', 'proximity thunderstorm with drizzle', 'fog', 'mist', 'overcast clouds', 'freezing rain', 'light rain', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', 'mon', 'tue', 'wed', 'thu', 'fry', 'sat', 'sun', 'traffic_volume']
     data_frame = [new_head]
+    holiday_dates = []
 
     # Alter and remove data
     for (i,d) in enumerate(data[1:], start=1):
@@ -43,18 +44,14 @@ def process_input(data):
         if d[0] == 'None' : 
             # In case theres no holiday
             data[i][0] = 0.0 
-        elif d[0] != 1.0:
-            # In case theres a non-binary holyday
-            # Count how many holidays flags are missing
-            j = i
-            day = curr_day = date_split(d[-2])['d']
-            while j < len(data) :
-                curr_day = date_split(data[j][-2])['d']
-                if day != curr_day : break
-                else : j += 1
-
-            # Iterate through timestamps binning holidays
-            for k in range(i,j) : data[k][0] = 1.0
+        elif d[-2].split()[0] in holiday_dates:
+            # In case its a known holyday date
+            data[i][0] = 1.0 
+        else: 
+            # In case theres a unknown holyday date
+            # Add its date to the bucket and bin it
+            holiday_dates.append(d[-2].split()[0])
+            data[i][0] = 1.0
 
     # # Discrete variables lists
     weekdays = {0:"mon", 1:"tue", 2:"wed", 3:"thu", 4:"fry", 5:"sat", 6:"sun"}

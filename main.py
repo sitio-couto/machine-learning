@@ -1,7 +1,7 @@
 from random import randint
 import numpy as np
 
-import new_model as model
+import first_model as model
 import normalization as norm
 import gradient_descent as desc
 import visualization as graph
