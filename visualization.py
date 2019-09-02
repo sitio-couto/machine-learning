@@ -260,4 +260,4 @@ def norm_check(feat_list):
 
 # alpha_comparison('s',"Stochastic Learning Rates", [0.1, 0.01, 0.001,0.0001])
 # gradient_comparison(0.01)
-learning_curve()
+#learning_curve()

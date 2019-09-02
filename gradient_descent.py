@@ -24,7 +24,7 @@ def cost(X, T, Y):
     cost = (1/(2*m))*sum((X.dot(T) - Y)**2)
     return cost[0] 
 
-def descent(X, T, Y, type='b', t_lim=30, e_lim=10**4, rate=0.0001, mb_size=5):
+def descent(X, T, Y, type='b', t_lim=30, e_lim=10000, rate=0.0001, mb_size=5):
     '''
         Return the models convergence obtained by the gradient descent.
         It is assumed that the bias is already included and the samples are shuffled.
