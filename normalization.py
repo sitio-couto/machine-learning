@@ -48,6 +48,3 @@ def normalize_data(data, choice=1, features=[1,2,3,4]):
 
     print
     return data
-
-def rmse(X, T, Y):
-    return np.sqrt(sum((X.dot(X) - Y)**2)/2*Y.shape[0])
