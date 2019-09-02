@@ -126,19 +126,29 @@ def avg_traffic_per_weather(data):
 
 #### MODEL ANALYSIS ####
 
-def learning_curve(X, Y, Xv, Yv, knowledge, test):
+def learning_curve():
+    X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
+    X = norm.normalize_data(X, choice=1, features=feat_list)
+    X, o, Y = desc.numpy_and_bias(X, Y)
+    desc.descent(X, o, Y, t_lim=30, e_lim=200, rate=1)
+    
+    Xv, Yv, feat_list = model.prepare_dataset("Datasets/validate.csv")
+    Xv = norm.normalize_data(Xv, choice=1, features=feat_list)
+    Xv, _, Yv = desc.numpy_and_bias(Xv, Yv)
+
     train = []
     valid = []
-    T = knowledge
+    T = desc.epochs_info[0]
+    
     step = int(max(1, np.floor(len(T)/100)))
     exp = range(0, len(T), step)
 
     for i in exp:
-        train.append(test(*(X,T[i],Y))/10**6)
-        valid.append(test(*(Xv,T[i],Yv))/10**6)
+        train.append(desc.cost(X,T[i],Y)/10**6)
+        valid.append(desc.cost(Xv,T[i],Yv)/10**6)
 
-    plt.plot(exp, train, label='Training')
     plt.plot(exp, valid, label='Validation')
+    plt.plot(exp, train, label='Training', ls='--')
     plt.legend()
     plt.xlabel('Experience (Epochs)')
     plt.ylabel('Learning (x10^6)')
@@ -249,4 +259,5 @@ def norm_check(feat_list):
 ##### CALLING AREA #####
 
 # alpha_comparison('s',"Stochastic Learning Rates", [0.1, 0.01, 0.001,0.0001])
-gradient_comparison(0.01)
+# gradient_comparison(0.01)
+learning_curve()
