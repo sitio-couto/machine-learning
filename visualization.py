@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import re
 
+from scipy import stats
+
 import first_model as model
 import normalization as norm
 import gradient_descent as desc
@@ -250,14 +252,27 @@ def alpha_comparison(type, title, alphas):
     plt.show()
     return 
 
-def norm_check(feat_list):
+def norm_check():
     X, Y, feat_list = model.prepare_dataset("Datasets/training.csv")
-    X = norm.normalize_data(X, choice=1, features=feat_list)
+    Xa = np.array(norm.normalize_data(X, choice=1, features=feat_list))
+    Xb = np.array(norm.normalize_data(X, choice=2, features=feat_list))
+    Xc = np.array(norm.normalize_data(X, choice=3, features=feat_list))
     
+    for x in [Xa,Xb,Xc]:
+        print("--- Normalizacao ---")
+        for j in feat_list:
+            print("-- Feature "+str(j)+":")
+            print("Max=>",np.amax(x[:,[j]]))
+            print("Media=>",np.mean(x[:,[j]]))
+            print("Min=>",np.amin(x[:,[j]]))
+            print("Stdv=>",np.std(x[:,[j]]))
+            print("Moda=>",stats.mode(x[:,[j]])[0])
+
 
 
 ##### CALLING AREA #####
 
 # alpha_comparison('s',"Stochastic Learning Rates", [0.1, 0.01, 0.001,0.0001])
 # gradient_comparison(0.01)
-learning_curve()
+# learning_curve()
+# norm_check()
