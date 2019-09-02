@@ -276,3 +276,4 @@ def norm_check():
 # gradient_comparison(0.01)
 # learning_curve()
 # norm_check()
+

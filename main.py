@@ -20,9 +20,9 @@ X_val, Y_val, _ = model.prepare_dataset("Datasets/validate.csv")
 X_val = norm.normalize_data(X_val, choice=1, features=feat_list)
 X_val, _, Y_val = desc.numpy_and_bias(X_val, Y_val)
 
-#T = desc.descent(X, T, Y, t_lim=180, e_lim=10000, type="s")
-#print("TRAIN SCORE=>", desc.score(X, T, Y))
-#print("VALID SCORE=>", desc.score(X_val, T, Y_val))
+T = desc.descent(X, T, Y, t_lim=180, e_lim=10000, type="s")
+print("TRAIN SCORE=>", desc.score(X, T, Y))
+print("VALID SCORE=>", desc.score(X_val, T, Y_val))
 # ### FITTING EVALUATION ###
 #T = desc.descent(X, T, Y, t_lim=30, e_lim=1000)
 #print(desc.epochs_count)
