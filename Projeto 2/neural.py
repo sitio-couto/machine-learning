@@ -29,9 +29,17 @@ class Network:
         Returns:
             numpy.ndarray : Array with the propagated value for the output layer
         '''
+        m = features.shape[1] # Get amount of samples to be propagated
+
         for table in self.theta : 
-            features = table.dot(np.vstack([[1], features]))
+            features = self.sigmoid(table.dot(np.vstack([[1]*m, features])))
         return features
+
+    def sigmoid(self, x):
+        return 1/(1 + np.exp(-x))
+
+    def cost(self, X, Y):
+        pass
 
 
 train = np.load("dataset/train.npz")
