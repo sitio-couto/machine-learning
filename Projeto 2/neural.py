@@ -20,22 +20,41 @@ class Network:
             table = [[uniform(-e,e) for j in range(m+1)] for i in range(n)]
             self.theta.append(np.array(table)) # Add matrix to model
 
-    def forward(self, features):
+    def forward(self, features, nodes=0):
         '''Execute the forward propagation using the defined thetas
         
         Parameters: 
             features (numpy.ndarray) : Column vector with input features (without bias)
+            nodes (list) : if instanciated, saves the nodes activation values for every layer
 
         Returns:
             numpy.ndarray : Array with the propagated value for the output layer
         '''
         m = features.shape[1] # Get amount of samples to be propagated
+        if isinstance(nodes, list) : nodes += [features]
 
         for table in self.theta : 
             features = self.sigmoid(table.dot(np.vstack([[1]*m, features])))
+            if isinstance(nodes, list) : nodes += [features]
+        
         return features
 
+    def backprop(self, X, Y):
+        delta = [np.zeros(i.shape) for i in self.theta] # Make room for the derivatives
+        H = self.forward(X) # Calculate hypotesis for every output node of every sample
+
+
+
+
     def sigmoid(self, x):
+        '''Calculates the sigmoid for the given value(s)
+
+        Parameters:
+            x (numpy.ndarray): matrix with the values with the function is applied
+
+        Returns:
+            numpy.ndarray : matrix with the trasnformed values
+        '''
         return 1/(1 + np.exp(-x))
 
     def cost(self, X, Y, l=0):
