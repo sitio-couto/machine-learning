@@ -38,8 +38,24 @@ class Network:
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))
 
-    def cost(self, X, Y):
-        pass
+    def cost(self, X, Y, l=0):
+        '''Calculates the current cost for the given samples (features and outputs)
+
+        Parameters:
+            X (numpy.ndarray): NxM matrix with N features and M samples
+            Y (numpy.ndarray): KxM matrix with K output nodes and M samples
+            l=0 (int): Regulrization parameter (0 disables regularization)
+
+        Returns:
+            float : Total cost for the current network and the given samples 
+        '''
+        m = Y.shape[1] # Get amount of 
+        fun = lambda x : (x[:,1:]*x[:,1:]).sum() # Sum squared parameters without bias 
+        H = self.forward(X) # Calculate hypotesis for every output node of every sample
+        
+        cost = -(Y*np.log(H) + (1-Y)*np.log(1-H)).sum()/m
+        regularization = l*(sum(map(fun, self.theta))/(2*m))
+        return cost + regularization
 
 
 train = np.load("dataset/train.npz")
