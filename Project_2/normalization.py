@@ -1,11 +1,27 @@
 import numpy as np
 
-def normalize_data(data, choice=1):
+def get_stats(data, choice=1):
+    means,stds,mins,ranges = [],[],[],[]
+    
+    # Stats for normalization
+    if choice == 1 or choice == 3:
+        mins = np.apply_along_axis(np.amin, 0, data)
+        maxs = np.apply_along_axis(np.amax, 0, data)
+        ranges = maxs - mins
+    if choice == 2 or choice == 3:
+        means = np.apply_along_axis(np.mean, 0, data)
+    if choice == 2:
+        stds = np.apply_along_axis(np.std, 0, data)
+    
+    return np.array([means,stds,mins,ranges])
+    
+def normalize_data(data, stats, choice=1):
     ''' Returns the normalized dataset.
     
         Parameters:
-            data (array list): numpy array with the dataset.
-            choice (int): integer indicating the transformation to be used.
+            data (array) : numpy array with the dataset.
+            stats (array): numpy array with stats given by "get_stats".
+            choice (int) : integer indicating the transformation to be used.
 
         Returns:
             data (array list):  transformed data (original data is lost).
@@ -14,23 +30,14 @@ def normalize_data(data, choice=1):
     #### Transforming the dataset ####
     # Min-max normalization
     if choice == 1:
-        mins = np.apply_along_axis(np.amin, 0, data)
-        maxs = np.apply_along_axis(np.amax, 0, data)
-        ranges = maxs - mins
-        data = np.apply_along_axis(lambda x: (x - mins)/ranges, 1, data)
+        data = np.apply_along_axis(lambda x: (x - stats[2])/stats[3], 1, data)
             
     # Standardization
     elif choice == 2:
-        means = np.apply_along_axis(np.mean, 0, data)
-        stds = np.apply_along_axis(np.std, 0, data)
-        data = np.apply_along_axis(lambda x: (x - means)/stds, 1, data)
+        data = np.apply_along_axis(lambda x: (x - stats[0])/stats[1], 1, data)
             
     # Mean normalization
     elif choice == 3:
-        means = np.apply_along_axis(np.mean, 0, data)
-        mins = np.apply_along_axis(np.amin, 0, data)
-        maxs = np.apply_along_axis(np.amax, 0, data)
-        ranges = maxs - mins
-        data = np.apply_along_axis(lambda x: (x - means)/ranges, 1, data)
+        data = np.apply_along_axis(lambda x: (x - stats[0])/stats[3], 1, data)
 
     return data
