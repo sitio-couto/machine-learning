@@ -31,20 +31,35 @@ class Network:
             numpy.ndarray : Array with the propagated value for the output layer
         '''
         m = features.shape[1] # Get amount of samples to be propagated
-        if isinstance(nodes, list) : nodes += [features]
+        if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
 
         for table in self.theta : 
             features = self.sigmoid(table.dot(np.vstack([[1]*m, features])))
-            if isinstance(nodes, list) : nodes += [features]
-        
+            if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
+
         return features
 
-    def backprop(self, X, Y):
-        delta = [np.zeros(i.shape) for i in self.theta] # Make room for the derivatives
-        H = self.forward(X) # Calculate hypotesis for every output node of every sample
+    def backprop(self, X, Y, l=0):
+        layer = [] # For keeping the activation values
+        theta = self.theta # Alias for the parameters
+        m = Y.shape[1] # Amount of samples backpropagated
+        delta = [np.zeros(i.shape) for i in theta] # For keeping the partial derivatives
+        H = self.forward(X, nodes=layer) # Calculate hypotesis for every output node of every sample
+        sigma = [np.zeros(i.shape) for i in layer[1:]] # For keeping the activation errors (except input layer)
 
+        sigma[-1] = H - Y # Get output layer error
+        
+        # Back propagate error to hidden layers (ignoring bias from thetas and layers)
+        for i in reversed(range(1, len(sigma))):
+            sig_d = layer[i][1:,]*(1-layer[i][1:,]) # Remove bias from layers for backpropagation
+            sigma[i-1] = (theta[i][:,1:].T).dot(sigma[i])*sig_d # Remove bias from thetas as well
 
-
+        # Accumulate derivatives values for every theta (should be done by epochs)
+        for i in range(len(delta)):
+            regularization = np.hstack([theta[i][:,[1]]*0, theta[i][:,1:]*l])
+            delta[i] = (delta[i] + sigma[i].dot(layer[i].T))/m + regularization
+        
+        return 
 
     def sigmoid(self, x):
         '''Calculates the sigmoid for the given value(s)
@@ -77,5 +92,13 @@ class Network:
         return cost + regularization
 
 
-train = np.load("dataset/train.npz")
-X, Y = train['xs'], train['ys']
+# train = np.load("dataset/train.npz")
+# X, Y = train['xs'], train['ys']
+
+import neural
+import numpy as np
+first = neural.Network([3,3,2,1])
+feat = np.array([[1],[2],[1]])
+Y = np.array([[1]])
+first.backprop(feat, Y)
+exit(1)
