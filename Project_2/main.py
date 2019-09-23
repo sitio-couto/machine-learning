@@ -7,15 +7,22 @@
 
 import numpy as np
 import normalization as norm
+import visualization as vis
+import logistic as lr
 
 # Getting Sets
 train = np.load('Dataset/train.npz')
+valid = np.load('Dataset/val.npz')
 X, Y  = train['xs'],train['ys']
+X_v, Y_v = valid['xs'],valid['ys']
+
+# Visualization
+#vis.histogram(Y,10)
 
 # Normalization
 choice = 1
 stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice)
-print(X)
-print(stats)
+X_v = norm.normalize_data(X_v, stats, choice)
 
+# Logistic Regression (Softmax)

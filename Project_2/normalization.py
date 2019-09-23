@@ -20,7 +20,7 @@ def normalize_data(data, stats, choice=1):
     
         Parameters:
             data (array) : numpy array with the dataset.
-            stats (array): numpy array with stats given by "get_stats".
+            stats (array): numpy array with stats given by "get_stats". 0: means. 1: stds. 2:mins. 3:ranges
             choice (int) : integer indicating the transformation to be used.
 
         Returns:
