@@ -9,6 +9,7 @@ import numpy as np
 import normalization as norm
 import visualization as vis
 import logistic as lr
+import misc
 
 # Getting Sets
 train = np.load('Dataset/train.npz')
@@ -24,5 +25,10 @@ choice = 1
 stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice)
 X_v = norm.normalize_data(X_v, stats, choice)
+
+# Initial coefficients and bias.
+X = np.insert(X, 0, 1, axis=1)
+X_v = np.insert(X_v, 0, 1, axis=1)
+T = misc.init_coefs(X.shape[1], 57)
 
 # Logistic Regression (Softmax)

@@ -4,9 +4,8 @@ import numpy as np
 def sigmoid(x):
     return 1/(1+np.exp(-x))
 
-def hypothesis(X, T):
+def predict(X, T):
     return sigmoid(X.dot(T))
-
 
 # Cost function
 def cost(Y, Y_pred):
@@ -22,3 +21,6 @@ def log(x, bound=1e-16):
 # Gradient Descent
 def gd_step(X, Y, T, Y_pred, alpha):
     return T - alpha * cost_derivative(X, Y, Y_pred)
+
+def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=1000):
+    return
