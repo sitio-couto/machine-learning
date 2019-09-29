@@ -188,33 +188,38 @@ class Network:
         print("NOTE: Time limit for descent exceded.")
         return data
 
-# train = np.load("dataset/train.npz")
-# X, Y = train['xs'], train['ys']
+    def __str__(self):
+        out = f'Network with {len(self.theta)+1} layers:\n'
+        for i,n in enumerate(self.theta):
+            out += f'   layer {i+1} - {n.shape[1]} nodes\n'
+        out += f'   layer {i+2} - {self.theta[-1].shape[0]} nodes\n'
+        out += f'Regularization parameter: {self.l}\n'
+        out += f'Amount of weights: {sum([x.size for x in self.theta])}\n'
+        return out
 
+# # Validation with "and" & "or" operations
+# X = np.array([[0,0,1,1],[0,1,0,1]])
 
-# Validation with "and" & "or" operations
-X = np.array([[0,0,1,1],[0,1,0,1]])
+# Y_and = np.array([[0,0,0,1]])
+# Y_or = np.array([[0,1,1,1]])
+# Y_xor = np.array([[1,0,0,1]])
+# Y_xnor = np.array([[0,1,1,0]])
 
-Y_and = np.array([[0,0,0,1]])
-Y_or = np.array([[0,1,1,1]])
-Y_xor = np.array([[1,0,0,1]])
-Y_xnor = np.array([[0,1,1,0]])
+# # Do not count bias when defining architecture
+# and_op = Network([2,2,1], l=0)
+# or_op = Network([2,2,1], l=0) 
+# xor_op = Network([2,2,1], l=0) 
+# xnor_op = Network([2,2,1], l=0) 
 
-# Do not count bias when defining architecture
-and_op = Network([2,2,1], l=0)
-or_op = Network([2,2,1], l=0) 
-xor_op = Network([2,2,1], l=0) 
-xnor_op = Network([2,2,1], l=0) 
-
-# If does not converge, change hyperparameters
-Ys = [Y_and,Y_or,Y_xor,Y_xnor]
-nets = [and_op,or_op,xor_op,xnor_op]
-t = 'm'
-for i,name in enumerate(['AND', 'OR', 'XOR', 'XNOR']):
-    print(f'--({name})-------------------')
-    print("Initial cost:", nets[i].cost(X, Ys[i]))
-    print(np.round(nets[i].forward(X)))
-    nets[i].train(X, Ys[i], type=t, t_lim=20, e_lim=50000, mb_size=3)
-    print("Trained cost:", nets[i].cost(X, Ys[i]))
-    print(X)
-    print(np.round(nets[i].forward(X)))
+# # If does not converge, change hyperparameters
+# Ys = [Y_and,Y_or,Y_xor,Y_xnor]
+# nets = [and_op,or_op,xor_op,xnor_op]
+# t = 'm'
+# for i,name in enumerate(['AND', 'OR', 'XOR', 'XNOR']):
+#     print(f'--({name})-------------------')
+#     print("Initial cost:", nets[i].cost(X, Ys[i]))
+#     print(np.round(nets[i].forward(X)))
+#     nets[i].train(X, Ys[i], type=t, t_lim=20, e_lim=50000, mb_size=3)
+#     print("Trained cost:", nets[i].cost(X, Ys[i]))
+#     print(X)
+#     print(np.round(nets[i].forward(X)))

@@ -9,6 +9,7 @@ import numpy as np
 import normalization as norm
 import visualization as vis
 import logistic as lr
+import neural as nr
 import misc
 
 # Getting Sets
@@ -26,9 +27,21 @@ stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice)
 X_v = norm.normalize_data(X_v, stats, choice)
 
+# Neural Network Logistic Regression (do not apply bias)
+Xn = X.T
+Yn = norm.out_layers(Y)
+feat = Xn.shape[0]
+out = Yn.shape[0]
+model = nr.Network([feat,feat,out])
+print(model)
+
+
 # Initial coefficients and bias.
 X = np.insert(X, 0, 1, axis=1)
 X_v = np.insert(X_v, 0, 1, axis=1)
 T = misc.init_coefs(X.shape[1], 57)
 
 # Logistic Regression (Softmax)
+
+
+
