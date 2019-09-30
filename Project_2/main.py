@@ -30,11 +30,8 @@ X_v = norm.normalize_data(X_v, stats, choice)
 # Neural Network Logistic Regression (do not apply bias)
 Xn = X.T
 Yn = norm.out_layers(Y)
-feat = Xn.shape[0]
-out = Yn.shape[0]
-model = nr.Network([feat,feat,out])
-print(model)
-
+vis.learning_curves(Xn, Yn)
+exit(1)
 
 # Initial coefficients and bias.
 X = np.insert(X, 0, 1, axis=1)

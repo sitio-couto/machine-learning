@@ -2,6 +2,7 @@ import numpy as np
 from random import uniform, seed, shuffle
 from datetime import datetime
 from time import time
+from copy import deepcopy
 
 # Set seed based on current time
 seed(datetime.now())
@@ -14,13 +15,13 @@ seed(datetime.now())
 # epoch data.
 class Epochs:
     def __init__(self, T, m, increment):
-        # Reset values
         self.index = 0  # Saves the positon in the ramdom list
         self.bound = m  # Total amount of samples
         self.epochs_count = 0      # Amount of comleted epochs
         self.start_time = time()   # Training starting time
         self.increment = increment # Amount of samples per iteration
-        self.epochs_info = [[T],[0.0]] # Keeps coeficients and timestamps per epoch
+        self.epochs_coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
+        self.epochs_time = [0.0]   # Marks when a ecpoch was complete
         self.samples_list = list(range(m)) # Radomized samples for istocastic methods
         shuffle(self.samples_list)
 
@@ -42,28 +43,42 @@ class Epochs:
 
         # Data for further analisys (Consumes time and memory)
         if (analisys) :
-            self.epochs_info[1].append(time() - self.start_time) # Adds time until epoch is done
-            self.epochs_info[0].append(T) # Adds current epoch cost
+            self.epochs_time.append(time() - self.start_time) # Adds time until epoch is done
+            self.epochs_coef.append(deepcopy(T)) # Adds current epoch cost
 
     def get_batch(self):
         '''Get samples indexes for the next batch'''
         return self.samples_list[self.index : self.index+self.increment]
 
+    def __str__(self):
+        out = f'<Epochs Object at {hex(id(self))}>'
+        out += f'Samples per Epoch: {self.bound}'
+        out += f'Current samples index: {self.index}'
+        out += f'Batch size: {self.increment}'
+        out += f'Epochs complete so far: {self.epochs_count}'
+        return out
 
 ###############################################################################
 
 class Network:
-    def __init__(self, model, e=1, l=0):
+    def __init__(self, model, e=1, l=0, T=0):
         '''Initializes coeficients tables with the network wheights
         
         Parameters: 
             model (list) : List with the amount of nodes per layer (without bias)
             e (float) : Range for the random coeficients initialization
             l (float) : Regularization parameter for the network (0 disables regularization)
+            T (list of numpy.ndarray): If instanciated, uses T as initial thetas
         '''
         self.l = l
         self.theta = []
-        # Use model array to define coeficients matrices dimensions
+
+        # If theres a set of predefine coeficients, use it
+        if (T) : 
+            self.theta = deepcopy(T)
+            return
+        
+        # If not preset coeficients, define matrices dimensions and initial thetas
         for (m,n) in zip(model[:-1], model[1:]):
             # Initializes thetas with values between -e and e (and adds bias <m+1>)
             table = [[uniform(-e,e) for j in range(m+1)] for i in range(n)]
@@ -85,9 +100,10 @@ class Network:
         '''
         m = features.shape[1] # Get amount of samples to be propagated
         if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
+        sigmoid = lambda x : 1/(1 + np.exp(-x))
 
         for table in self.theta : 
-            features = self.sigmoid(table.dot(np.vstack([[1]*m, features])))
+            features = sigmoid(table.dot(np.vstack([[1]*m, features])))
             if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
 
         return features
@@ -102,7 +118,7 @@ class Network:
         Returns:
             list of numpy.ndarray : Gradients for each set of thetas in the network 
         '''
-        l = self.l # Alias for th regularization parameter
+        l = self.l # Alias for the regularization parameter
         theta = self.theta # Alias for the parameters
         m = Y.shape[1] # Amount of samples to be backpropagated
 
@@ -126,17 +142,6 @@ class Network:
         
         return delta
 
-    def sigmoid(self, x):
-        '''Calculates the sigmoid for the given value(s)
-
-        Parameters:
-            x (numpy.ndarray): matrix with the values with the function is applied
-
-        Returns:
-            numpy.ndarray : matrix with the trasnformed values
-        '''
-        return 1/(1 + np.exp(-x))
-
     def cost(self, X, Y):
         '''Calculates the current cost for the given samples (features and outputs)
 
@@ -155,7 +160,7 @@ class Network:
         regularization = self.l*(sum(map(fun, self.theta))/(2*m))
         return cost + regularization
 
-    def train(self, X, Y, type='b', t_lim=30, e_lim=10000, rate=0.01, mb_size=5, v=False):
+    def train(self, X, Y, type='b', t_lim=30, e_lim=10000, rate=0.01, mb_size=5, analisys=False):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
@@ -178,24 +183,51 @@ class Network:
             # Update coeficients
             for i in range(len(delta)): 
                 self.theta[i] = self.theta[i] - rate*delta[i] 
-            data.update(self.theta, analisys=v)
+            data.update(self.theta, analisys=analisys)
 
             # Check termination
             if data.epochs_count >= e_lim : 
                 print("NOTE: Epochs limit for descent reached.")       
-                return
+                return data
             
         print("NOTE: Time limit for descent exceded.")
         return data
 
     def __str__(self):
-        out = f'Network with {len(self.theta)+1} layers:\n'
+        out = f'<Network Object at {hex(id(self))}>'
+        out += f'Compose of {len(self.theta)+1} layers:\n'
         for i,n in enumerate(self.theta):
             out += f'   layer {i+1} - {n.shape[1]} nodes\n'
         out += f'   layer {i+2} - {self.theta[-1].shape[0]} nodes\n'
         out += f'Regularization parameter: {self.l}\n'
         out += f'Amount of weights: {sum([x.size for x in self.theta])}\n'
         return out
+
+
+def cost(X, Y, T, l=0):
+        '''Calculates the cost for the set of samples X and Y in the network T
+
+        Parameters:
+            X (numpy.ndarray): NxM matrix with N features and M samples
+            Y (numpy.ndarray): KxM matrix with K output nodes and M samples
+            T (list of numpy.ndarray): List with weights for each pair of layers
+            l (float): Regularization parameter used to train the network
+
+        Returns:
+            float : Total cost for the current network and the given samples 
+        '''
+        m = Y.shape[1] # Get amount of 
+        fun = lambda x : (x[:,1:]*x[:,1:]).sum() # Sum squared parameters without bias 
+        sigmoid = lambda x : 1/(1 + np.exp(-x))
+        
+        # Forward propagation
+        H = X
+        for table in T : H = sigmoid(table.dot(np.vstack([[1]*m, H])))
+
+        # Cost calculation
+        cost = -(Y*np.log(H) + (1-Y)*np.log(1-H)).sum()/m
+        regularization = l*(sum(map(fun, T))/(2*m))
+        return cost + regularization
 
 # # Validation with "and" & "or" operations
 # X = np.array([[0,0,1,1],[0,1,0,1]])
@@ -219,7 +251,7 @@ class Network:
 #     print(f'--({name})-------------------')
 #     print("Initial cost:", nets[i].cost(X, Ys[i]))
 #     print(np.round(nets[i].forward(X)))
-#     nets[i].train(X, Ys[i], type=t, t_lim=20, e_lim=50000, mb_size=3)
-#     print("Trained cost:", nets[i].cost(X, Ys[i]))
+#     nets[i].train(X, Ys[i], type=t, t_lim=10, e_lim=20000, mb_size=3)
+#     print("Trained cost:", cost(X, Ys[i], nets[i].theta))
 #     print(X)
 #     print(np.round(nets[i].forward(X)))
