@@ -15,8 +15,9 @@ import misc
 # Getting Sets
 train = np.load('Dataset/train.npz')
 valid = np.load('Dataset/val.npz')
-X, Y  = train['xs'],train['ys']
-X_v, Y_v = valid['xs'],valid['ys']
+X, Y  = train['xs'].astype('float32') , train['ys'].astype('int8')
+X_v, Y_v = valid['xs'].astype('float32') , valid['ys'].astype('int8')
+print("Dataset read!")
 
 # Visualization
 #vis.histogram(Y,10)
@@ -25,7 +26,9 @@ X_v, Y_v = valid['xs'],valid['ys']
 choice = 1
 stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice)
+print("Training data Normalized!")
 X_v = norm.normalize_data(X_v, stats, choice)
+print("Val Data normalized!")
 
 # Neural Network (do not apply bias)
 #Xn = X.T
@@ -34,15 +37,15 @@ X_v = norm.normalize_data(X_v, stats, choice)
 #exit(1)
 
 # Initial coefficients and bias.
-bias = np.ones(X.shape[0])
-#X = np.insert(X, 0, 1, axis=1)
-#X_v = np.insert(X_v, 0, 1, axis=1)
+X = np.insert(X, 0, 1, axis=1)
+X_v = np.insert(X_v, 0, 1, axis=1)
+print("Bias Added")
 classes = np.max(Y) + 1
-T = misc.init_coefs(X.shape[1], classes, 57)
-print(lr.cost(Y, X.dot(T)))
+T = misc.init_coefs(X.shape[1], classes, 57).astype('float32')
 
 # Logistic Regression (Softmax)
-#T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.001, 10)
-#v_pred = predict(X_v, T)
-#print(cost(Y_v, v_pred))
+print("Regression:")
+T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.001, 10)
+v_pred = lr.predict(X_v, T)
+print(v_pred, Y_v)
 
