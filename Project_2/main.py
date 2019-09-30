@@ -61,8 +61,9 @@ T = misc.init_coefs(X.shape[1], classes, 57).astype('float32')
 
 # Logistic Regression (Softmax)
 print("Regression:")
-T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.01, 100)
+T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.01, 200)
 v_pred = lr.predict(X_v, T)
 confusion = misc.confusion_matrix(Y_v, v_pred, classes)
-print(confusion)
+acc = misc.accuracy(confusion)
+print(acc)
 
