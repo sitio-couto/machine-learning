@@ -27,11 +27,26 @@ stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice)
 X_v = norm.normalize_data(X_v, stats, choice)
 
-# Neural Network (do not apply bias)
-#Xn = X.T
-#Yn = norm.out_layers(Y)
-#vis.learning_curves(Xn, Yn)
-#exit(1)
+##### NEURAL NETWORK ####
+print("Starting neural network section")
+# Adjusting input matrices (assumes X is normalized)
+Xn = X.T
+Yn = norm.out_layers(Y)
+print("Handled input")
+# Builds network object
+feat = Xn.shape[0]
+out = Yn.shape[0]
+batch_size = int(np.round(Xn.shape[1]*0.1))
+model = nr.Network([feat,feat,out], l=2)
+print('Created model')
+print("Initial Cost:", model.cost(Xn, Yn))
+exit(1)
+# Train model
+data = model.train(Xn, Yn, type='m', mb_size=batch_size)
+print("Trained Cost:", model.cost(Xn, Yn))
+
+# # Neural Network descent visualization
+# vis.learning_curves(Xn, Yn, m=80000)
 
 # Initial coefficients and bias.
 bias = np.ones(X.shape[0])
