@@ -14,18 +14,20 @@ seed(datetime.now())
 # list if samples indexes for randomizations and lists for keeping
 # epoch data.
 class Epochs:
-    def __init__(self, T, m, increment):
+    def __init__(self, T, m, increment, analisys):
         self.index = 0  # Saves the positon in the ramdom list
         self.bound = m  # Total amount of samples
         self.epochs_count = 0      # Amount of comleted epochs
         self.start_time = time()   # Training starting time
         self.increment = increment # Amount of samples per iteration
-        self.epochs_coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
-        self.epochs_time = [0.0]   # Marks when a ecpoch was complete
         self.samples_list = list(range(m)) # Radomized samples for istocastic methods
+        self.analisys = analisys # Defines if data will be kept for analisys
         shuffle(self.samples_list)
+        if (self.analisys):
+            self.epochs_coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
+            self.epochs_time = [0.0]   # Marks when a ecpoch was complete
 
-    def update(self, T, analisys=False):
+    def update(self, T):
         '''Updates hyperparameters (epoch count, samples ramdomization)
         
             Parameters:
@@ -42,7 +44,7 @@ class Epochs:
         shuffle(self.samples_list) # Reshuffle samples
 
         # Data for further analisys (Consumes time and memory)
-        if (analisys) :
+        if (self.analisys) :
             self.epochs_time.append(time() - self.start_time) # Adds time until epoch is done
             self.epochs_coef.append(deepcopy(T)) # Adds current epoch cost
 
@@ -61,7 +63,7 @@ class Epochs:
 ###############################################################################
 
 class Network:
-    def __init__(self, model, e=1, l=0, T=0):
+    def __init__(self, model, e=10, l=0, T=0):
         '''Initializes coeficients tables with the network wheights
         
         Parameters: 
@@ -76,13 +78,11 @@ class Network:
         # If theres a set of predefine coeficients, use it
         if (T) : 
             self.theta = deepcopy(T)
-            return
-        
-        # If not preset coeficients, define matrices dimensions and initial thetas
-        for (m,n) in zip(model[:-1], model[1:]):
-            # Initializes thetas with values between -e and e (and adds bias <m+1>)
-            table = [[uniform(-e,e) for j in range(m+1)] for i in range(n)]
-            self.theta.append(np.array(table)) # Add matrix to model
+        else:
+            # If no preset, instanciate thetas and set random initial thetas
+            for (n,m) in zip(model[1:],model[:-1]): 
+                # Instanciate weights with values between -e and e
+                self.theta.append((np.random.rand(n,m+1)-0.5)*2*e)
 
     def set_lambda(self, l):
         '''Changes the original regularization paramter value'''
@@ -100,7 +100,6 @@ class Network:
         '''
         m = features.shape[1] # Get amount of samples to be propagated
         if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
-        sigmoid = lambda x : 1/(1 + np.exp(-x))
 
         for table in self.theta : 
             features = sigmoid(table.dot(np.vstack([[1]*m, features])))
@@ -152,11 +151,12 @@ class Network:
         Returns:
             float : Total cost for the current network and the given samples 
         '''
-        m = Y.shape[1] # Get amount of 
+        e = 10**-6 # Offset used to avoid log(0) (prevents NaNs)
+        m = Y.shape[1]  # Get amount of samples
         fun = lambda x : (x[:,1:]*x[:,1:]).sum() # Sum squared parameters without bias 
-        H = self.forward(X) # Calculate hypotesis for every output node of every sample
-        
-        cost = -(Y*np.log(H) + (1-Y)*np.log(1-H)).sum()/m
+        H = self.forward(X) # Calculate hypotesis for every output node of every sampl
+
+        cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
         regularization = self.l*(sum(map(fun, self.theta))/(2*m))
         return cost + regularization
 
@@ -172,7 +172,7 @@ class Network:
             Epochs : Class containing the runtime info.
         '''
         increment = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
-        data = Epochs(self.theta, Y.shape[1], increment) # Saves hyperparameters and other info for analisys 
+        data = Epochs(self.theta, Y.shape[1], increment, analisys) # Saves hyperparameters and other info for analisys 
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -183,7 +183,7 @@ class Network:
             # Update coeficients
             for i in range(len(delta)): 
                 self.theta[i] = self.theta[i] - rate*delta[i] 
-            data.update(self.theta, analisys=analisys)
+            data.update(self.theta)
 
             # Check termination
             if data.epochs_count >= e_lim : 
@@ -203,6 +203,19 @@ class Network:
         out += f'Amount of weights: {sum([x.size for x in self.theta])}\n'
         return out
 
+def sigmoid(x):
+    '''Function for calculating the sigmoid and preventing overflow
+
+        Parameters:
+            x (float): Value for which the sigmoid will be calculated
+
+        Returns:
+            float : Sigmoid of x
+    '''
+    # The masks rounds values preventing np.exp to overflow
+    x[x >  100] =  100.0
+    x[x < -100] = -100.0
+    return 1/(1 + np.exp(-x))
 
 def cost(X, Y, T, l=0):
         '''Calculates the cost for the set of samples X and Y in the network T
@@ -216,16 +229,16 @@ def cost(X, Y, T, l=0):
         Returns:
             float : Total cost for the current network and the given samples 
         '''
+        e = 10**-6 # Offset used to avoid log(0) (prevents NaNs)
         m = Y.shape[1] # Get amount of 
         fun = lambda x : (x[:,1:]*x[:,1:]).sum() # Sum squared parameters without bias 
-        sigmoid = lambda x : 1/(1 + np.exp(-x))
         
         # Forward propagation
         H = X
         for table in T : H = sigmoid(table.dot(np.vstack([[1]*m, H])))
 
         # Cost calculation
-        cost = -(Y*np.log(H) + (1-Y)*np.log(1-H)).sum()/m
+        cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
         regularization = l*(sum(map(fun, T))/(2*m))
         return cost + regularization
 
