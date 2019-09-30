@@ -31,26 +31,27 @@ X_v = norm.normalize_data(X_v, stats, choice)
 print("Val Data normalized!")
 
 ##### NEURAL NETWORK ####
-print("Starting neural network section")
+#print("Starting neural network section")
 # Adjusting input matrices (assumes X is normalized)
-Xn = X.T
-Yn = norm.out_layers(Y)
-print("Handled input")
+#Xn = X.T
+#Yn = norm.out_layers(Y)
+#print("Handled input")
 # Builds network object
-feat = Xn.shape[0]
-out = Yn.shape[0]
-batch_size = int(np.round(Xn.shape[1]*0.1))
-model = nr.Network([feat,feat,out], l=2)
-print('Created model')
-print("Initial Cost:", model.cost(Xn, Yn))
-exit(1)
+#feat = Xn.shape[0]
+#out = Yn.shape[0]
+#batch_size = int(np.round(Xn.shape[1]*0.1))
+#model = nr.Network([feat,feat,out], l=2)
+#print('Created model')
+#print("Initial Cost:", model.cost(Xn, Yn))
+#exit(1)
 # Train model
-data = model.train(Xn, Yn, type='m', mb_size=batch_size)
-print("Trained Cost:", model.cost(Xn, Yn))
+#data = model.train(Xn, Yn, type='m', mb_size=batch_size)
+#print("Trained Cost:", model.cost(Xn, Yn))
 
 # # Neural Network descent visualization
 # vis.learning_curves(Xn, Yn, m=80000)
 
+##### MULTINOMIAL LOGISTIC REGRESSION ####
 # Initial coefficients and bias.
 X = np.insert(X, 0, 1, axis=1)
 X_v = np.insert(X_v, 0, 1, axis=1)
@@ -60,7 +61,8 @@ T = misc.init_coefs(X.shape[1], classes, 57).astype('float32')
 
 # Logistic Regression (Softmax)
 print("Regression:")
-T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.001, 10)
+T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.01, 100)
 v_pred = lr.predict(X_v, T)
-print(v_pred, Y_v)
+confusion = misc.confusion_matrix(Y_v, v_pred, classes)
+print(confusion)
 

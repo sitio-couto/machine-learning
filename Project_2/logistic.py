@@ -2,9 +2,9 @@ import numpy as np
 
 # Activation function
 def softmax(x):
-    x -= np.max(x)          # Numeric Stability
+    x -= np.max(x, axis=1, keepdims=True)          # Numeric Stability
     x_exp = np.exp(x)
-    return x_exp/x_exp.sum()
+    return x_exp/x_exp.sum(axis=1, keepdims=True)
     
 def prob(X, T):
     return softmax(X.dot(T))
@@ -30,9 +30,9 @@ def log(x, bound=1e-16):
 def gd_step(X, Y, T, Y_prob, alpha):
     return T - alpha * cost_derivative(X, Y, Y_prob)
 
-def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=1000):
+def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=100):
     
-    # First losses
+    # First losses and scores
     Y_prob = prob(X, T)
     Y_v_prob = prob(X_v, T)
     
@@ -45,7 +45,7 @@ def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=1000):
         # New theta
         T = gd_step(X, Y, T, Y_prob, alpha)
         
-        # New predictions and losses
+        # New scores and losses
         Y_prob = prob(X, T)
         loss = cost(Y, Y_prob)
         
@@ -53,12 +53,10 @@ def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=1000):
         Y_v_prob = prob(X_v, T)
         v_loss = cost(Y_v, Y_v_prob)
         
-        # Updating loss
+        # Updating best loss
         if v_loss < best_loss:
             best_loss = v_loss
             best_T = T.copy()
-        
-        # Early stopping for accuracy
         
         print(f"Epoch {i+1:04d}/{e_lim:04d}", f"loss: {loss:.4f} | val loss: {v_loss:.4f}")
         
