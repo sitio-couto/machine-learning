@@ -54,7 +54,7 @@ def out_layers(array):
     lower = min(array)
     upper = max(array)
     lines = upper-lower+1
-    new_arr = np.zeros((lines,len(array)))
+    new_arr = np.zeros((lines,len(array)), dtype=np.float32)
 
     for j,i in enumerate(map(lambda x : x-lower, array)):
        new_arr[i,j] = 1
