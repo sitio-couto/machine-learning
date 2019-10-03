@@ -1,4 +1,5 @@
 import numpy as np
+import misc
 from random import uniform, seed, shuffle
 from datetime import datetime
 from time import time
@@ -9,23 +10,23 @@ seed(datetime.now())
 
 class Meta:
     def __init__(self, T, m, batch_size, sampling=0):
-        self.index = 0  # Saves the positon in the ramdom list
+        self.index = 0  # Saves the position in the random list
         self.iters = 0  # Counts the number of weights updates 
         self.bound = m  # Total amount of samples
-        self.epochs_count = 0      # Amount of comleted epochs
-        self.start_time = time()   # Training starting time
-        self.sampling = sampling   # Numeber of iterations which samples are colected
-        self.samples_list = list(range(m)) # Radomized samples for istocastic methods
+        self.epochs_count = 0      # Amount of completed epochs
+        self.start_time = time()   # Training start time
+        self.sampling = sampling   # Number of iterations which samples are collected
+        self.samples_list = list(range(m)) # Radomized samples for stochastic methods
         shuffle(self.samples_list)
         
         # Checks it the batch is an integer (n samples) or percentage and, if 
-        # is a percentage, adjust to number of samples
+        # it's a percentage, adjust to number of samples
         if not isinstance(batch_size, int) :
             self.batch_size = int(np.ceil(m*batch_size))
         else : 
             self.batch_size = batch_size
         
-        # If analisys data will be kept, saves time and thetas
+        # If analysis data will be kept, saves time and thetas
         if (self.sampling):
             self.epochs_coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
             self.epochs_time = [0.0]   # Marks when a ecpoch was complete
@@ -35,23 +36,30 @@ class Meta:
         
             Parameters:
                 T (list of np.ndarray) : Coeficients from the current epoch
-                analisys (bool) : If true, keeps arguments for analisys
+                analysis (bool) : If true, keeps arguments for analysis
+            Returns:
+                change (bool) : if true, epoch finished
         '''
+        
         # Update index (add samples used in iteration)
         self.iters += 1
         self.index += self.batch_size
+        change = False
         
         # If epoch completed
         if self.index >= self.bound :
             self.index = 0             # Reset samples index
             self.epochs_count += 1     # Count finished epoch
             shuffle(self.samples_list) # Reshuffle samples
+            change = True              # Returns finished epoch
 
-        # Data for further analisys (Consumes time and memory)
+        # Data for further analysis (Consumes time and memory)
         if (self.sampling and self.iters//self.sampling) :
             self.iters = 0
             self.epochs_time.append(time() - self.start_time) # Adds time until epoch is done
             self.epochs_coef.append(deepcopy(T)) # Adds current epoch cost
+            
+        return change
 
     def get_batch(self):
         '''Get samples indexes for the next batch'''
@@ -68,17 +76,16 @@ class Meta:
 ###############################################################################
 
 class Network:
-    def __init__(self, model, f='lg', e=5, l=0, T=0, seed=0):
-        '''Initializes coeficients tables with the network wheights
+    def __init__(self, model, f='sg', reg_lambda=0, T=0, seed=0):
+        '''Initializes coeficients tables with the network weights
         
         Parameters: 
             model (list) : List with the amount of nodes per layer (without bias)
             f (String) : Identification for the function to be minimized
-            e (float) : Range for the random coeficients initialization
-            l (float) : Regularization parameter for the network (0 disables regularization)
+            reg_lambda (float) : Regularization parameter for the network (0 disables regularization)
             T (list of numpy.ndarray): If instanciated, uses T as initial thetas
         '''
-        self.l = l
+        self.reg_lambda = reg_lambda
         self.f = f
         self.theta = []
 
@@ -87,9 +94,10 @@ class Network:
 
         # If no preset, instanciate thetas and set random initial thetas
         for (n,m) in zip(model[1:],model[:-1]): 
-            # Instanciate weights with values between -e and e
+            
+            # Instanciate weights with Xavier initialization
             rand = np.random.RandomState(seed=seed)
-            self.theta.append((rand.rand(n,m+1).astype(np.float32)-0.5)*2*e)
+            self.theta.append((np.sqrt(2/(m+1)) * rand.randn(n,m+1)).astype(np.float32))
 
     # Cost function
     def cost(self, X, Y):
@@ -109,13 +117,13 @@ class Network:
         H = self.frag_forward(X, 10) # Get output layer activation values
 
         # Calculate cost function
-        if self.f == 'lg': # Use logistic cost
+        if self.f == 'sg': # Use sigmoid cost
             cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
         elif self.f == 'sm': # Use softmax cost
             cost = (-Y * np.log(softmax(H)+e)).mean()
 
         # Calculate regularization, if parameter is set
-        if self.l : reg = self.l*(sum(map(fun, self.theta))/(2*m))
+        if self.reg_lambda : reg = self.reg_lambda*(sum(map(fun, self.theta))/(2*m))
 
         return cost + reg
 
@@ -131,7 +139,7 @@ class Network:
         '''
         m = Y.shape[1]  # Get amount of samples
 
-        if self.f =='lg': # Use logistic derivative
+        if self.f =='sg': # Use sigmoid derivative
             return H - Y
         elif self.f == 'sm': # Use softmax derivative
             return softmax(H) - Y
@@ -166,7 +174,7 @@ class Network:
         Returns:
             list of numpy.ndarray : Gradients for each set of thetas in the network 
         '''
-        l = self.l # Alias for the regularization parameter
+        reg_lambda = self.reg_lambda # Regularization parameter
         theta = self.theta # Alias for the parameters
         m = Y.shape[1] # Amount of samples to be backpropagated
 
@@ -184,14 +192,14 @@ class Network:
             sigma[i-1] = (theta[i][:,1:].T).dot(sigma[i])*sig_d # Remove bias from thetas as well
 
         # Accumulate derivatives values for every theta (does not update thetas)
-        # - Biases are not regularized, so the biases weights are casted to zero
+        # - Biases are not regularized, so the bias weights are casted to zero
         for i in range(len(delta)):
-            if l : reg = np.insert(theta[i][:,1:]*l, 0, 0, axis=1)
+            if reg_lambda : reg = np.insert(theta[i][:,1:]*reg_lambda, 0, 0, axis=1)
             delta[i] = (delta[i] + sigma[i].dot(layer[i].T))/m + reg
         
         return delta
 
-    def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, analisys=False):
+    def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, analysis=False):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
@@ -203,8 +211,8 @@ class Network:
             Meta : Class containing the runtime info.
         '''
         # Initializes epochs metadata class
-        batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
-        data = Meta(self.theta, Y.shape[1], batch_size, sampling=4000) # Saves hyperparameters and other info for analisys 
+        batch_size = {'b':Y.shape[1], 'm':mb_size, 's':1}.get(type) 
+        data = Meta(self.theta, Y.shape[1], batch_size, sampling=4000) # Saves hyperparameters and other info for analysis 
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -212,11 +220,15 @@ class Network:
             b = data.get_batch() # Get indexes for mini batch
             delta = self.backprop(X[:,b], Y[:,b])
             
-            # Update coeficients
+            # Update coefficients
             for i in range(len(delta)): 
                 self.theta[i] = self.theta[i] - rate*delta[i] 
-            data.update(self.theta)
-
+            
+            change = data.update(self.theta)
+            if change:
+                loss = self.cost(X,Y)
+                print(f"Epoch {data.epochs_count:04d}/{e_lim:04d}", f"loss: {loss:.4f}")
+            
             # Check termination
             if data.epochs_count >= e_lim : 
                 print("NOTE: Epochs limit for descent reached.")       
@@ -239,8 +251,8 @@ class Network:
         m = X.shape[1]
         size = int(np.ceil(m/parts)) # Get size of each batch
         out_layer = np.zeros((self.theta[-1].shape[0],m)) # Prealocate output layer
-        batchs = [i*size for i in range(int(np.ceil(parts)+1))] # Slices indexes
-        for (s,e) in zip(batchs[:-1], batchs[1:]): # Propagate for each slice
+        batches = [i*size for i in range(int(np.ceil(parts)+1))] # Slices indexes
+        for (s,e) in zip(batches[:-1], batches[1:]): # Propagate for each slice
             out_layer[:,s:e] += self.forward(X[:,s:e])
         return out_layer
 
@@ -263,7 +275,7 @@ class Network:
 
     def save(self, file_name):
         '''Function for saving the current network to a file'''
-        save_list = [np.array([self.l,self.f])]
+        save_list = [np.array([self.reg_lambda,self.f])]
         save_list += self.theta
         np.savez(file_name, save_list)
         print(f"Model saved as {file_name}")
@@ -271,7 +283,7 @@ class Network:
     def load(self, file_name):
         '''Function for loading a Network from a file'''
         obj = np.load(file_name)
-        self.l = int(obj['arr_0'][0][0])
+        self.reg_lambda = int(obj['arr_0'][0][0])
         self.f = str(obj['arr_0'][0][1])
         self.theta = []
         for T in obj['arr_0'][1:]:
@@ -279,14 +291,14 @@ class Network:
         print(f"Model {file_name} loaded")
 
     def __str__(self):
-        funcs = {'lg':'Logistic', 'sm':'Softmax'}
+        funcs = {'sg':'Sigmoid', 'sm':'Softmax'}
         out = f'<Network Object at {hex(id(self))}>\n'
         out += f'Composed of {len(self.theta)+1} layers:\n'
         for i,n in enumerate(self.theta):
             out += f'   layer {i+1} - {n.shape[1]} nodes\n'
         out += f'   Out layer - {self.theta[-1].shape[0]} nodes\n'
         out += f'Cost function: {funcs[self.f]}\n'
-        out += f'Regularization parameter: {self.l}\n'
+        out += f'Regularization parameter: {self.reg_lambda}\n'
         out += f'Amount of weights: {sum([x.size for x in self.theta])}\n'
         return out
 
@@ -312,14 +324,14 @@ def sigmoid(x):
     x[x < -50] = -50.0
     return 1/(1 + np.exp(-x))
 
-def cost(X, Y, T, l=0):
+def cost(X, Y, T, reg_lambda=0):
         '''Calculates the cost for the set of samples X and Y in the network T
 
         Parameters:
             X (numpy.ndarray): NxM matrix with N features and M samples
             Y (numpy.ndarray): KxM matrix with K output nodes and M samples
             T (list of numpy.ndarray): List with weights for each pair of layers
-            l (float): Regularization parameter used to train the network
+            reg_lambda (float): Regularization parameter used to train the network
 
         Returns:
             float : Total cost for the current network and the given samples 
@@ -334,7 +346,7 @@ def cost(X, Y, T, l=0):
 
         # Cost calculation
         cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
-        regularization = l*(sum(map(fun, T))/(2*m))
+        regularization = reg_lambda*(sum(map(fun, T))/(2*m))
         return cost + regularization
 
 # # Validation with "and" & "or" operations
@@ -346,10 +358,10 @@ def cost(X, Y, T, l=0):
 # Y_xnor = np.array([[0,1,1,0]])
 
 # # Do not count bias when defining architecture
-# and_op = Network([2,2,1], l=0)
-# or_op = Network([2,2,1], l=0) 
-# xor_op = Network([2,2,1], l=0) 
-# xnor_op = Network([2,2,1], l=0) 
+# and_op = Network([2,2,1], reg_lambda=0)
+# or_op = Network([2,2,1], reg_lambda=0) 
+# xor_op = Network([2,2,1], reg_lambda=0) 
+# xnor_op = Network([2,2,1], reg_lambda=0) 
 
 # # If does not converge, change hyperparameters
 # Ys = [Y_and,Y_or,Y_xor,Y_xnor]

@@ -80,13 +80,14 @@ def run_neural_network(X, Y):
     # Builds network object
     feat = Xn.shape[0]
     out = Yn.shape[0]
-    batch_size = int(np.ceil(Xn.shape[1]*0.1))
-    model = nr.Network([feat,feat,out])
+    model = nr.Network([feat,feat,out], f="sg")
     print('Created model')
     print("Initial Accuracy:", model.accuracy(Xn, Yn))
     
     # Train model
-    data = model.train(Xn, Yn, type='m', mb_size=batch_size)
+    batch_size = int(np.ceil(Xn.shape[1]*0.1))
+    batch_size = 256
+    data = model.train(Xn, Yn, type='m', mb_size=batch_size, e_lim=2, t_lim=200)
     
     return Xn, Yn, model
 
@@ -97,6 +98,4 @@ def test_neural_network(Xn, Yn, model):
     print("Trained Accuracy:", model.accuracy(Xn, Yn))
 
     # Neural Network descent visualization
-    vis.learning_curves(Xn, Yn, m=80000)
-
-
+    #vis.learning_curves(Xn, Yn, m=80000)
