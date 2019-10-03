@@ -63,7 +63,7 @@ class Epochs:
 ###############################################################################
 
 class Network:
-    def __init__(self, model, e=10, l=0, T=0):
+    def __init__(self, model, e=10, l=0, T=0, seed=0):
         '''Initializes coeficients tables with the network wheights
         
         Parameters: 
@@ -82,11 +82,7 @@ class Network:
             # If no preset, instanciate thetas and set random initial thetas
             for (n,m) in zip(model[1:],model[:-1]): 
                 # Instanciate weights with values between -e and e
-                self.theta.append((np.random.rand(n,m+1)-0.5)*2*e)
-
-    def set_lambda(self, l):
-        '''Changes the original regularization paramter value'''
-        self.l = l
+                self.theta.append((np.random.rand(n,m+1).astype(np.float32)-0.5)*2*e)
 
     def forward(self, features, nodes=0):
         '''Execute the forward propagation using the defined thetas
@@ -99,12 +95,13 @@ class Network:
             numpy.ndarray : Array with the propagated value for the output layer
         '''
         m = features.shape[1] # Get amount of samples to be propagated
-        if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
 
-        for table in self.theta : 
-            features = sigmoid(table.dot(np.vstack([[1]*m, features])))
-            if isinstance(nodes, list) : nodes += [np.vstack([[1]*m, features])]
+        for table in self.theta :
+            features = np.insert(features, 0, 1, axis=0)
+            if isinstance(nodes, list) : nodes += [features] 
+            features = sigmoid(table.dot(features))
 
+        if isinstance(nodes, list) : nodes += [features]
         return features
 
     def backprop(self, X, Y):
@@ -125,19 +122,20 @@ class Network:
         delta = [np.zeros(i.shape) for i in theta] # For keeping the partial derivatives
         H = self.forward(X, nodes=layer) # Calculate hypotesis for every output node of every sample
         sigma = [np.zeros(i.shape) for i in layer[1:]] # For keeping the activation errors (except input layer)
+        reg = 0
 
         sigma[-1] = H - Y # Get output layer error
         
         # Back propagate error to hidden layers (does not propagate to bias nodes)
         for i in reversed(range(1, len(sigma))):
-            sig_d = layer[i][1:,]*(1-layer[i][1:,]) # Remove bias from layers for backpropagation
+            sig_d = layer[i][1:,:]*(1-layer[i][1:,:]) # Remove bias from layers for backpropagation
             sigma[i-1] = (theta[i][:,1:].T).dot(sigma[i])*sig_d # Remove bias from thetas as well
 
         # Accumulate derivatives values for every theta (does not update thetas)
         # - Biases are not regularized, so the biases weights are casted to zero
         for i in range(len(delta)):
-            regularization = np.hstack([theta[i][:,[1]]*0, theta[i][:,1:]*l])
-            delta[i] = (delta[i] + sigma[i].dot(layer[i].T))/m + regularization
+            if l : reg = np.insert(theta[i][:,1:]*l, 0, 0, axis=1)
+            delta[i] = (delta[i] + sigma[i].dot(layer[i].T))/m + reg
         
         return delta
 
@@ -157,10 +155,10 @@ class Network:
         H = self.forward(X) # Calculate hypotesis for every output node of every sampl
 
         cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
-        regularization = self.l*(sum(map(fun, self.theta))/(2*m))
-        return cost + regularization
+        if self.l : reg = self.l*(sum(map(fun, self.theta))/(2*m))
+        return cost + reg
 
-    def train(self, X, Y, type='b', t_lim=30, e_lim=10000, rate=0.01, mb_size=5, analisys=False):
+    def train(self, X, Y, type='b', t_lim=7000, e_lim=100000, rate=0.01, mb_size=5, analisys=False):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
@@ -193,6 +191,14 @@ class Network:
         print("NOTE: Time limit for descent exceded.")
         return data
 
+    def accuracy(self, X, Y):
+        m = Y.shape[1]
+        H = self.forward(X, Y)
+        H = H.argmax(axis=0)
+        Y = Y.argmax(axis=0)
+        hits = (H==Y).sum()
+        return hits*100/m
+
     def __str__(self):
         out = f'<Network Object at {hex(id(self))}>'
         out += f'Compose of {len(self.theta)+1} layers:\n'
@@ -213,8 +219,8 @@ def sigmoid(x):
             float : Sigmoid of x
     '''
     # The masks rounds values preventing np.exp to overflow
-    x[x >  100] =  100.0
-    x[x < -100] = -100.0
+    x[x >  50] =  50.0
+    x[x < -50] = -50.0
     return 1/(1 + np.exp(-x))
 
 def cost(X, Y, T, l=0):
