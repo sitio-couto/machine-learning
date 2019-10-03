@@ -18,7 +18,7 @@ classes = np.max(Y) + 1
 print("Dataset read!")
 
 # Normalization
-choice = 1
+choice = 2
 stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice).astype('float32')
 print("Training data Normalized!")
@@ -26,7 +26,7 @@ X_v = norm.normalize_data(X_v, stats, choice).astype('float32')
 print("Val Data normalized!")
 
 #### MULTINOMIAL LOGISTIC REGRESSION ####
-run.logistic(X, X_v, Y, Y_v, 0.01, 10, classes)
+run.logistic(X, X_v, Y, Y_v, 0.01, 300, classes)
 
 #### NEURAL NETWORK ####
 #run.neural_network(X, Y)
