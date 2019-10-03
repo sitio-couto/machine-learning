@@ -15,10 +15,13 @@ def logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes):
     X_v = np.insert(X_v, 0, 1, axis=1)
     print("Bias Added")
     
-    T = run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes)
+    T, history = run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes)
+
+    # Learning curve
+    vis.learning_with_history(history)
 
     # Testing
-    print("\nTraining Metrics:")
+    print("Training Metrics:")
     test_logistic(X, Y, T, classes)
     
     print("Validation Metrics:")
@@ -34,8 +37,8 @@ def run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes):
     T = misc.init_coefs(X.shape[1], classes, 57).astype('float32')
 
     print("Regression:")
-    T = lr.gradient_descent(X, Y, X_v, Y_v, T, alpha, n_epochs)
-    return T
+    T, hist = lr.gradient_descent(X, Y, X_v, Y_v, T, alpha, n_epochs)
+    return T, hist
 
 def test_logistic(X, Y, T, classes):
     '''

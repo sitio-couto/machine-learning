@@ -48,3 +48,17 @@ def learning_curves(X, Y, n=(0,3073), m=100):
     plt.legend()
     plt.show()
     
+
+def learning_with_history(history):
+    '''
+        Plots learning curves from history (dictionary of lists)
+    '''
+    keys = sorted(history.keys())
+    for k in keys:
+        plt.plot(history[k])
+        
+    plt.legend(keys, loc='upper left')
+    plt.xlabel('Epoch')
+    plt.ylabel('Cost')
+    plt.title('Learning Curve')
+    plt.show()
