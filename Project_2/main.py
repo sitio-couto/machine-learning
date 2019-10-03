@@ -20,9 +20,9 @@ print("Dataset read!")
 # Normalization
 choice = 1
 stats = norm.get_stats(X, choice)
-X = norm.normalize_data(X, stats, choice)
+X = norm.normalize_data(X, stats, choice).astype('float32')
 print("Training data Normalized!")
-X_v = norm.normalize_data(X_v, stats, choice)
+X_v = norm.normalize_data(X_v, stats, choice).astype('float32')
 print("Val Data normalized!")
 
 #### MULTINOMIAL LOGISTIC REGRESSION ####
