@@ -5,15 +5,15 @@ def get_stats(data, choice=1):
     
     # Stats for normalization
     if choice == 1 or choice == 3:
-        mins = np.apply_along_axis(np.amin, 0, data)
-        maxs = np.apply_along_axis(np.amax, 0, data)
+        mins = np.apply_along_axis(np.amin, 0, data).astype('float16')
+        maxs = np.apply_along_axis(np.amax, 0, data).astype('float16')
         ranges = maxs - mins
     if choice == 2 or choice == 3:
-        means = np.apply_along_axis(np.mean, 0, data)
+        means = np.apply_along_axis(np.mean, 0, data).astype('float16')
     if choice == 2:
-        stds = np.apply_along_axis(np.std, 0, data)
+        stds = np.apply_along_axis(np.std, 0, data).astype('float16')
     
-    return np.array([means,stds,mins,ranges])
+    return {'mean':means, 'std':stds, 'mins':mins, 'range':ranges}
     
 def normalize_data(data, stats, choice=1):
     ''' Returns the normalized dataset.
@@ -30,15 +30,15 @@ def normalize_data(data, stats, choice=1):
     #### Transforming the dataset ####
     # Min-max normalization
     if choice == 1:
-        data = np.apply_along_axis(lambda x: (x - stats[2])/stats[3], 1, data)
+        data = np.apply_along_axis(lambda x: (x - stats['mins'])/stats['range'], 1, data)
             
     # Standardization
     elif choice == 2:
-        data = np.apply_along_axis(lambda x: (x - stats[0])/stats[1], 1, data)
+        data = np.apply_along_axis(lambda x: (x - stats['mean'])/stats['std'], 1, data)
             
     # Mean normalization
     elif choice == 3:
-        data = np.apply_along_axis(lambda x: (x - stats[0])/stats[3], 1, data)
+        data = np.apply_along_axis(lambda x: (x - stats['mean'])/stats['range'], 1, data)
 
     return data
 

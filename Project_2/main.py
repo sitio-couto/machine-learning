@@ -7,62 +7,26 @@
 
 import numpy as np
 import normalization as norm
-import visualization as vis
-import logistic as lr
-import neural as nr
-import misc
+import run
 
 # Getting Sets
 train = np.load('Dataset/train.npz')
 valid = np.load('Dataset/val.npz')
 X, Y  = train['xs'].astype('float32') , train['ys'].astype('int8')
 X_v, Y_v = valid['xs'].astype('float32') , valid['ys'].astype('int8')
+classes = np.max(Y) + 1
 print("Dataset read!")
 
-# Visualization
-#vis.histogram(Y,10)
-
 # Normalization
-choice = 1
+choice = 2
 stats = norm.get_stats(X, choice)
-X = norm.normalize_data(X, stats, choice)
+X = norm.normalize_data(X, stats, choice).astype('float32')
 print("Training data Normalized!")
-X_v = norm.normalize_data(X_v, stats, choice)
+X_v = norm.normalize_data(X_v, stats, choice).astype('float32')
 print("Val Data normalized!")
 
+#### MULTINOMIAL LOGISTIC REGRESSION ####
+run.logistic(X, X_v, Y, Y_v, 0.01, 300, classes)
+
 #### NEURAL NETWORK ####
-print("Starting neural network section")
-# Adjusting input matrices (assumes X is normalized)
-Xn = X.T
-Yn = norm.out_layers(Y)
-print("Handled input")
-# Builds network object
-feat = Xn.shape[0]
-out = Yn.shape[0]
-batch_size = int(np.ceil(Xn.shape[1]*0.1))
-model = nr.Network([feat,feat,out])
-print('Created model')
-print("Initial Accuracy:", model.accuracy(Xn, Yn))
-# Train model
-data = model.train(Xn, Yn, type='m', mb_size=batch_size)
-print("Trained Accuracy:", model.accuracy(Xn, Yn))
-
-# # Neural Network descent visualization
-# vis.learning_curves(Xn, Yn, m=80000)
-
-# ##### MULTINOMIAL LOGISTIC REGRESSION ####
-# # Initial coefficients and bias.
-# X = np.insert(X, 0, 1, axis=1)
-# X_v = np.insert(X_v, 0, 1, axis=1)
-# print("Bias Added")
-# classes = np.max(Y) + 1
-# T = misc.init_coefs(X.shape[1], classes, 57).astype('float32')
-
-# # Logistic Regression (Softmax)
-# print("Regression:")
-# T = lr.gradient_descent(X, Y, X_v, Y_v, T, 0.01, 200)
-# v_pred = lr.predict(X_v, T)
-# confusion = misc.confusion_matrix(Y_v, v_pred, classes)
-# acc = misc.accuracy(confusion)
-# print(acc)
-
+#run.neural_network(X, Y)
