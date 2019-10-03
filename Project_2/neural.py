@@ -7,23 +7,26 @@ from copy import deepcopy
 # Set seed based on current time
 seed(datetime.now())
 
-### global epoch variables ####
-# References the current sample(s) used, ensuring that gradients
-# such as stoch and minib iterate through all the samples instead
-# of repeating samples in each iteration. Also provides a shuffled
-# list if samples indexes for randomizations and lists for keeping
-# epoch data.
-class Epochs:
-    def __init__(self, T, m, increment, analisys):
+class Meta:
+    def __init__(self, T, m, batch_size, sampling=0):
         self.index = 0  # Saves the positon in the ramdom list
+        self.iters = 0  # Counts the number of weights updates 
         self.bound = m  # Total amount of samples
         self.epochs_count = 0      # Amount of comleted epochs
         self.start_time = time()   # Training starting time
-        self.increment = increment # Amount of samples per iteration
+        self.sampling = sampling   # Numeber of iterations which samples are colected
         self.samples_list = list(range(m)) # Radomized samples for istocastic methods
-        self.analisys = analisys # Defines if data will be kept for analisys
         shuffle(self.samples_list)
-        if (self.analisys):
+        
+        # Checks it the batch is an integer (n samples) or percentage and, if 
+        # is a percentage, adjust to number of samples
+        if not isinstance(batch_size, int) :
+            self.batch_size = int(np.ceil(m*batch_size))
+        else : 
+            self.batch_size = batch_size
+        
+        # If analisys data will be kept, saves time and thetas
+        if (self.sampling):
             self.epochs_coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
             self.epochs_time = [0.0]   # Marks when a ecpoch was complete
 
@@ -35,54 +38,103 @@ class Epochs:
                 analisys (bool) : If true, keeps arguments for analisys
         '''
         # Update index (add samples used in iteration)
-        self.index += self.increment
-        if self.index < self.bound : return
+        self.iters += 1
+        self.index += self.batch_size
         
         # If epoch completed
-        self.index = 0             # Reset samples index
-        self.epochs_count += 1     # Count finished epoch
-        shuffle(self.samples_list) # Reshuffle samples
+        if self.index >= self.bound :
+            self.index = 0             # Reset samples index
+            self.epochs_count += 1     # Count finished epoch
+            shuffle(self.samples_list) # Reshuffle samples
 
         # Data for further analisys (Consumes time and memory)
-        if (self.analisys) :
+        if (self.sampling and self.iters//self.sampling) :
+            self.iters = 0
             self.epochs_time.append(time() - self.start_time) # Adds time until epoch is done
             self.epochs_coef.append(deepcopy(T)) # Adds current epoch cost
 
     def get_batch(self):
         '''Get samples indexes for the next batch'''
-        return self.samples_list[self.index : self.index+self.increment]
+        return self.samples_list[self.index : self.index+self.batch_size]
 
     def __str__(self):
-        out = f'<Epochs Object at {hex(id(self))}>'
+        out = f'<Meta Object at {hex(id(self))}>'
         out += f'Samples per Epoch: {self.bound}'
         out += f'Current samples index: {self.index}'
-        out += f'Batch size: {self.increment}'
+        out += f'Batch size: {self.batch_size}'
         out += f'Epochs complete so far: {self.epochs_count}'
         return out
 
 ###############################################################################
 
 class Network:
-    def __init__(self, model, e=10, l=0, T=0, seed=0):
+    def __init__(self, model, f='lg', e=5, l=0, T=0, seed=0):
         '''Initializes coeficients tables with the network wheights
         
         Parameters: 
             model (list) : List with the amount of nodes per layer (without bias)
+            f (String) : Identification for the function to be minimized
             e (float) : Range for the random coeficients initialization
             l (float) : Regularization parameter for the network (0 disables regularization)
             T (list of numpy.ndarray): If instanciated, uses T as initial thetas
         '''
         self.l = l
+        self.f = f
         self.theta = []
 
-        # If theres a set of predefine coeficients, use it
-        if (T) : 
-            self.theta = deepcopy(T)
-        else:
-            # If no preset, instanciate thetas and set random initial thetas
-            for (n,m) in zip(model[1:],model[:-1]): 
-                # Instanciate weights with values between -e and e
-                self.theta.append((np.random.rand(n,m+1).astype(np.float32)-0.5)*2*e)
+        # Generates a random seed based on current time
+        if not seed : int(divmod(time(), 1)[1])
+
+        # If no preset, instanciate thetas and set random initial thetas
+        for (n,m) in zip(model[1:],model[:-1]): 
+            # Instanciate weights with values between -e and e
+            rand = np.random.RandomState(seed=seed)
+            self.theta.append((rand.rand(n,m+1).astype(np.float32)-0.5)*2*e)
+
+    # Cost function
+    def cost(self, X, Y):
+        '''Calculates the current cost for the given samples (features and outputs)
+
+        Parameters:
+            X (numpy.ndarray): NxM matrix with N features and M samples
+            Y (numpy.ndarray): KxM matrix with K output nodes and M samples
+
+        Returns:
+            float : Total cost for the current network and the given samples 
+        '''
+        reg = 0 # Regularization value (weight reduction)
+        e = 10**-6 # Offset used to avoid log(0) (prevents NaNs)
+        m = Y.shape[1]  # Get amount of samples
+        fun = lambda x : (x[:,1:]*x[:,1:]).sum() # Sum squared parameters without bias 
+        H = self.frag_forward(X, 10) # Get output layer activation values
+
+        # Calculate cost function
+        if self.f == 'lg': # Use logistic cost
+            cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
+        elif self.f == 'sm': # Use softmax cost
+            cost = (-Y * np.log(softmax(H)+e)).mean()
+
+        # Calculate regularization, if parameter is set
+        if self.l : reg = self.l*(sum(map(fun, self.theta))/(2*m))
+
+        return cost + reg
+
+    def cost_deriv(self, H, Y):
+        '''Calculates the current cost for the given samples (features and outputs)
+
+        Parameters:
+            H (numpy.ndarray): NxM matrix with output layer activation values (N node X M samples)
+            Y (numpy.ndarray): KxM matrix with K output nodes and M samples
+
+        Returns:
+            float : Total cost for the current network and the given samples 
+        '''
+        m = Y.shape[1]  # Get amount of samples
+
+        if self.f =='lg': # Use logistic derivative
+            return H - Y
+        elif self.f == 'sm': # Use softmax derivative
+            return softmax(H) - Y
 
     def forward(self, features, nodes=0):
         '''Execute the forward propagation using the defined thetas
@@ -124,7 +176,7 @@ class Network:
         sigma = [np.zeros(i.shape) for i in layer[1:]] # For keeping the activation errors (except input layer)
         reg = 0
 
-        sigma[-1] = H - Y # Get output layer error
+        sigma[-1] = self.cost_deriv(H, Y)
         
         # Back propagate error to hidden layers (does not propagate to bias nodes)
         for i in reversed(range(1, len(sigma))):
@@ -139,26 +191,7 @@ class Network:
         
         return delta
 
-    def cost(self, X, Y):
-        '''Calculates the current cost for the given samples (features and outputs)
-
-        Parameters:
-            X (numpy.ndarray): NxM matrix with N features and M samples
-            Y (numpy.ndarray): KxM matrix with K output nodes and M samples
-
-        Returns:
-            float : Total cost for the current network and the given samples 
-        '''
-        e = 10**-6 # Offset used to avoid log(0) (prevents NaNs)
-        m = Y.shape[1]  # Get amount of samples
-        fun = lambda x : (x[:,1:]*x[:,1:]).sum() # Sum squared parameters without bias 
-        H = self.forward(X) # Calculate hypotesis for every output node of every sampl
-
-        cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
-        if self.l : reg = self.l*(sum(map(fun, self.theta))/(2*m))
-        return cost + reg
-
-    def train(self, X, Y, type='b', t_lim=7000, e_lim=100000, rate=0.01, mb_size=5, analisys=False):
+    def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, analisys=False):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
@@ -167,10 +200,11 @@ class Network:
             type (int): The choice of descent ('s'-stoch|'m'-mini|'b'-batch).
 
         Returns:
-            Epochs : Class containing the runtime info.
+            Meta : Class containing the runtime info.
         '''
-        increment = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
-        data = Epochs(self.theta, Y.shape[1], increment, analisys) # Saves hyperparameters and other info for analisys 
+        # Initializes epochs metadata class
+        batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
+        data = Meta(self.theta, Y.shape[1], batch_size, sampling=4000) # Saves hyperparameters and other info for analisys 
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -191,23 +225,78 @@ class Network:
         print("NOTE: Time limit for descent exceded.")
         return data
 
+    def frag_forward(self, X, parts):
+        '''Wrapper for the forward propagation which splits the M samples in slices
+           Prevents numpy memory spikes during large matrix multiplications           
+
+        Parameters:
+            X (Float 2dArray): NxM matrix with N input feratures and M samples
+            type (int): The choice of descent ('s'-stoch|'m'-mini|'b'-batch).
+
+        Returns:
+            numpy.ndarray : Array with the propagated value for the output layer
+        '''
+        m = X.shape[1]
+        size = int(np.ceil(m/parts)) # Get size of each batch
+        out_layer = np.zeros((self.theta[-1].shape[0],m)) # Prealocate output layer
+        batchs = [i*size for i in range(int(np.ceil(parts)+1))] # Slices indexes
+        for (s,e) in zip(batchs[:-1], batchs[1:]): # Propagate for each slice
+            out_layer[:,s:e] += self.forward(X[:,s:e])
+        return out_layer
+
     def accuracy(self, X, Y):
-        m = Y.shape[1]
-        H = self.forward(X, Y)
+        '''Caculates the cost for a set of samples in the current network
+        
+            Parameters:
+                X (Float 2dArray): NxM matrix with N input features and M samples
+                Y (Float 2dArray): NxM matrix with the expected M output layers
+            
+            Returns:
+                float : Percentage of correct predictions for the M samples
+        '''
+        m = Y.shape[1] 
+        H = self.frag_forward(X, 10)
         H = H.argmax(axis=0)
         Y = Y.argmax(axis=0)
         hits = (H==Y).sum()
         return hits*100/m
 
+    def save(self, file_name):
+        '''Function for saving the current network to a file'''
+        save_list = [np.array([self.l,self.f])]
+        save_list += self.theta
+        np.savez(file_name, save_list)
+        print(f"Model saved as {file_name}")
+ 
+    def load(self, file_name):
+        '''Function for loading a Network from a file'''
+        obj = np.load(file_name)
+        self.l = int(obj['arr_0'][0][0])
+        self.f = str(obj['arr_0'][0][1])
+        self.theta = []
+        for T in obj['arr_0'][1:]:
+            self.theta.append(T)
+        print(f"Model {file_name} loaded")
+
     def __str__(self):
-        out = f'<Network Object at {hex(id(self))}>'
-        out += f'Compose of {len(self.theta)+1} layers:\n'
+        funcs = {'lg':'Logistic', 'sm':'Softmax'}
+        out = f'<Network Object at {hex(id(self))}>\n'
+        out += f'Composed of {len(self.theta)+1} layers:\n'
         for i,n in enumerate(self.theta):
             out += f'   layer {i+1} - {n.shape[1]} nodes\n'
-        out += f'   layer {i+2} - {self.theta[-1].shape[0]} nodes\n'
+        out += f'   Out layer - {self.theta[-1].shape[0]} nodes\n'
+        out += f'Cost function: {funcs[self.f]}\n'
         out += f'Regularization parameter: {self.l}\n'
         out += f'Amount of weights: {sum([x.size for x in self.theta])}\n'
         return out
+
+###################################################
+def softmax(x):
+    x -= np.max(x, axis=0, keepdims=True)          # Numeric Stability
+    x_exp = np.exp(x)
+    return x_exp/x_exp.sum(axis=0, keepdims=True)
+
+#####################################################
 
 def sigmoid(x):
     '''Function for calculating the sigmoid and preventing overflow
