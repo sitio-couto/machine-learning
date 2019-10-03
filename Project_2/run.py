@@ -10,12 +10,11 @@ def logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes):
     '''
         Wrapper for logistic regression
     '''
-    
     X = np.insert(X, 0, 1, axis=1)
     X_v = np.insert(X_v, 0, 1, axis=1)
     print("Bias Added")
     
-    T, history = run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes)
+    T, history = run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, len(classes))
 
     # Learning curve
     vis.learning_with_history(history)
@@ -27,14 +26,14 @@ def logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes):
     print("Validation Metrics:")
     test_logistic(X_v, Y_v, T, classes)
     
-def run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, classes):
+def run_logistic(X, X_v, Y, Y_v, alpha, n_epochs, n_classes):
     '''
         Runs multinomial logistic regression.
         Uses Xavier Random Initialization of coefficients.
         Gradient descent: softmax function.
     '''
     
-    T = misc.init_coefs(X.shape[1], classes, 57).astype('float32')
+    T = misc.init_coefs(X.shape[1], n_classes, 57).astype('float32')
 
     print("Regression:")
     T, hist = lr.gradient_descent(X, Y, X_v, Y_v, T, alpha, n_epochs)
@@ -47,8 +46,10 @@ def test_logistic(X, Y, T, classes):
     '''
     
     pred = lr.predict(X, T)
-    met = misc.get_metrics(Y, pred, classes) 
-    np.set_printoptions(precision=4)   
+    met, conf = misc.get_metrics(Y, pred, len(classes)) 
+    vis.plot_confusion_matrix(conf, classes, model = 'Multinomial Logistic Regression')
+    
+    np.set_printoptions(precision=4)
     print(f'Accuracy: {met["accuracy"]:.4f}')
     print(f'Normalized Accuracy: {met["norm_acc"].mean():.4f}')
     print(f'Precision per class: {met["precision"]} (avg. precision: {met["precision"].mean():.4f})')

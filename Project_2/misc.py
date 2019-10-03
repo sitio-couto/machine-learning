@@ -43,4 +43,4 @@ def get_metrics(target, predictions, classes):
     f1 = f1_score(prec, rec)
     avg_acc = (prec + rec)/2
     
-    return {'accuracy':acc, 'norm_acc':avg_acc, 'precision':prec, 'recall':rec, 'f1':f1}
+    return {'accuracy':acc, 'norm_acc':avg_acc, 'precision':prec, 'recall':rec, 'f1':f1}, conf
