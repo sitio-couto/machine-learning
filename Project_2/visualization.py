@@ -26,7 +26,7 @@ def sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073), m=1000):
     b=256
     s = 50
     
-    func = ['lg','sm']
+    func = ['sg','sm']
     titles = ['Sigmoid','Softmax']
 
     for i,title in enumerate(titles):
