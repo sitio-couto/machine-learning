@@ -58,12 +58,17 @@ def test_logistic(X, Y, T, classes):
     print()
 
 #### NEURAL NETWORK FUNCTIONS ####
-def neural_network(X, Xv, Y, Yv):
+def neural_network(X, Xv, Y, Yv, classes):
     '''
         Wrapper for neural network
     '''
     Xn, Yn, model = run_neural_network(X, Y)
-    test_neural_network(Xn, Yn, model)
+    
+    print("Training Metrics:")
+    test_neural_network(Xn, Y, model, classes)
+    
+    print("Validation Metrics:")
+    test_neural_network(Xv.T, Yv, model, classes)
 
 def run_neural_network(X, Y):
     '''
@@ -80,7 +85,7 @@ def run_neural_network(X, Y):
     # Builds network object
     feat = Xn.shape[0]
     out = Yn.shape[0]
-    model = nr.Network([feat,feat,out], f="sm")
+    model = nr.Network([feat,feat,out], f="sg")
     print('Created model')
     print("Initial Accuracy:", model.accuracy(Xn, Yn))
     
@@ -91,11 +96,21 @@ def run_neural_network(X, Y):
     
     return Xn, Yn, model
 
-def test_neural_network(X, Y, model):
+def test_neural_network(X, Y, model, classes):
     '''
         Function to test neural network.
     '''
-    print("Trained Accuracy:", model.accuracy(X, Y))
-
+    pred = model.predict(X)
+    met, conf = misc.get_metrics(Y, pred, len(classes)) 
+    vis.plot_confusion_matrix(conf, classes, model='Neural Network')
+    
+    np.set_printoptions(precision=4)
+    print(f'Accuracy: {met["accuracy"]:.4f}')
+    print(f'Normalized Accuracy: {met["norm_acc"].mean():.4f}')
+    print(f'Precision per class: {met["precision"]} (avg. precision: {met["precision"].mean():.4f})')
+    print(f'Recall per class: {met["recall"]} (avg. recall: {met["recall"].mean():.4f})')
+    print(f'F1-Score per class: {met["f1"]} (avg. f1-score: {met["f1"].mean():.4f})')
+    print()
+    
     # Neural Network descent visualization
     #vis.learning_curves(Xn, Yn, m=80000)

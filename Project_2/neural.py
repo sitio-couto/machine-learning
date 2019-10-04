@@ -262,7 +262,7 @@ class Network:
         
             Parameters:
                 X (Float 2dArray): NxM matrix with N input features and M samples
-                Y (Float 2dArray): NxM matrix with the expected M output layers
+                Y (Int 2dArray): NxM matrix with the expected M output layers
             
             Returns:
                 float : Percentage of correct predictions for the M samples
@@ -273,6 +273,21 @@ class Network:
         Y = Y.argmax(axis=0)
         hits = (H==Y).sum()
         return hits*100/m
+    
+    def predict(self, X):
+        '''
+           Predicts classes of examples.
+           
+           Parameters:
+                X (Float 2dArray): NxM matrix with N input features and M samples
+                
+           Returns:
+                Int Array: N-dimensional array with predictions
+        '''
+        
+        H = self.frag_forward(X, 10)
+        H = H.argmax(axis=0)
+        return H
 
     def save(self, file_name):
         '''Function for saving the current network to a file'''
