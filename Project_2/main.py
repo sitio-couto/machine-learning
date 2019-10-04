@@ -39,6 +39,6 @@ X = X.T
 Y = norm.out_layers(Y)
 Xv = X_v.T
 Yv = norm.out_layers(Y_v)
-
 # visu.sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073), m=10000)
-visu.second_model(X, Y, Xv, Yv, n=(0,1024), m=10000)
+# visu.comparing_models(X, Y, Xv, Yv, n=(0,3073))
+visu.overfitting(X, Y, Xv, Yv, m=80000)

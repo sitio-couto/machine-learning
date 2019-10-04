@@ -98,7 +98,6 @@ class Network:
             rand = np.random.RandomState(seed=seed)
             self.theta.append((np.sqrt(2/(m+1)) * rand.randn(n,m+1)).astype(np.float32))
 
-    # Cost function
     def cost(self, X, Y):
         '''Calculates the current cost for the given samples (features and outputs)
 
@@ -180,7 +179,7 @@ class Network:
         m = Y.shape[1] # Amount of samples to be backpropagated
 
         layer = [] # For keeping the activation values
-        delta = [np.zeros(i.shape) for i in theta] # For keeping the partial derivatives
+        grad = [np.zeros(i.shape) for i in theta] # For keeping the partial derivatives
         H = self.forward(X, nodes=layer) # Calculate hypotesis for every output node of every sample
         sigma = [np.zeros(i.shape) for i in layer[1:]] # For keeping the activation errors (except input layer)
         reg = 0
@@ -194,11 +193,11 @@ class Network:
 
         # Accumulate derivatives values for every theta (does not update thetas)
         # - Biases are not regularized, so the bias weights are casted to zero
-        for i in range(len(delta)):
+        for i in range(len(grad)):
             if reg_lambda : reg = np.insert(theta[i][:,1:]*reg_lambda, 0, 0, axis=1)
-            delta[i] = (delta[i] + sigma[i].dot(layer[i].T))/m + reg
+            grad[i] = (grad[i] + sigma[i].dot(layer[i].T))/m + reg
         
-        return delta
+        return grad
 
     def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, sampling=0):
         '''Trains the model until one of the given limits are reached
@@ -214,16 +213,18 @@ class Network:
         # Initializes epochs metadata class
         batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
         data = Meta(self.theta, Y.shape[1], batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
+        # optmizer = Optimizer()
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
             # Getting new Thetas
             b = data.get_batch() # Get indexes for mini batch
-            delta = self.backprop(X[:,b], Y[:,b])
-            
+            grad = self.backprop(X[:,b], Y[:,b])
+            # grad = self.Optimizer.optimize(grad)
+
             # Update coefficients
-            for i in range(len(delta)): 
-                self.theta[i] = self.theta[i] - rate*delta[i] 
+            for i in range(len(grad)): 
+                self.theta[i] = self.theta[i] - rate*grad[i] 
             
             change = data.update(self.theta)
             if change:
@@ -302,6 +303,38 @@ class Network:
         out += f'Regularization parameter: {self.reg_lambda}\n'
         out += f'Amount of weights: {sum([x.size for x in self.theta])}\n'
         return out
+
+#############################################################################
+
+class Optimizer:
+    def __init__(self, choice=None, T=0, batch=0):
+        self.choice = choice
+    
+        if choice=='adadelta':
+            self.e = 10**-6
+            self.decay = 0.9
+            self.batch = batch 
+            self.avg = [np.zeros(t.shape) for t in T]
+            self.delta = [np.zeros(t.shape) for t in T]
+        else:
+            print("Invalid Optimizer.")
+            
+        
+    def optimize(self, grad):
+        
+        if self.choice=='adadelta':
+            grad = adadelta(grad)
+    
+        return grad
+
+    # Adadalta.
+    def adadelta(self,  grad, sqrs, deltas, rho, batch_size):
+        for (g,avg,delta) in zip(grad, self.avg, self.delta):
+            avg = self.decay*avg + (1-self.decay)*(g/self.batch)**2
+            new_delta = np.sqrt(delta+self.e)/np.sqrt(rmse+self.e)
+            new_delta *= grad
+            deltas = self.decay*delta + (1-self.decay)*new_delta**2
+            grad = cur_delta
 
 ###################################################
 def softmax(x):

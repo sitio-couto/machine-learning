@@ -44,7 +44,7 @@ def sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073), m=1000):
     plt.show()
     
 
-def second_model(X, Y, Xv, Yv, n=(0,3073), m=1000):
+def comparing_models(X, Y, Xv, Yv, n=(0,3073), m=80000):
     plot_info = []
 
     samples = rd.sample(range(Y.shape[1]), m)
@@ -54,22 +54,22 @@ def second_model(X, Y, Xv, Yv, n=(0,3073), m=1000):
     out = Y.shape[0]
 
     e=50
-    t=300
+    t=30
     r=0.005
     b=256
-    s=40
+    s=10
     
-    arc1 = [int(np.floor(1024/2**i)) for i in range(5)] + [32,32,10]
-    arc2 = [1024,1024,10]
-    arc = [arc1, arc2]
-
-    func = ['sg','sg']
-    titles = ['First Model', 'Second Model']
+    # arc1 = [3072, 3072, 10]
+    # arc4 = [3072, 768, 192, 48, 10]
+    arc5 = [3072, 256, 128, 10]
+    arc6 = [3072, 128, 64, 32, 10]
+    arc = [arc5, arc6]
+    titles = ['Fifth Model','Sixth Model']
 
     for i,title in enumerate(titles):
         C = []
         print("Architecture:", arc[i])
-        model = nr.Network([feat,feat,out],  f=func[i], seed=23)
+        model = nr.Network(arc[i], seed=23)
         data = model.train(X, Y, type='m', t_lim=t, e_lim=e, rate=r, mb_size=b, sampling=s)
         for T in data.coef : C.append(nr.accuracy(X,Y,T))
         plot_info.append((title, range(0,len(data.coef)), C))
@@ -80,6 +80,43 @@ def second_model(X, Y, Xv, Yv, n=(0,3073), m=1000):
     plt.ylabel("Accuracy")
     plt.legend()
     plt.show()
+
+def overfitting(X, Y, Xv, Yv, n=(0,3073), m=1000):
+    plot_info = []
+
+    samples = rd.sample(range(Y.shape[1]), m)
+    X = X[n[0]:n[1],samples]
+    Y = Y[:,samples]
+    feat = X.shape[0]
+    out = Y.shape[0]
+
+    e=50
+    t=600
+    r=0.005
+    b=256
+    s=50
+    
+    arc = [3072, 256, 128, 10]
+
+    C = []
+    V = []
+    print("Architecture:", arc)
+    model = nr.Network([feat,feat,out], seed=23)
+    data = model.train(X, Y, type='m', t_lim=t, e_lim=e, rate=r, mb_size=b, sampling=s)
+    for T in data.coef : 
+        C.append(nr.accuracy(X,Y,T))
+        V.append(nr.accuracy(Xv,Yv,T)) 
+    plot_info.append(('Training Set', range(0,len(data.coef)), C))
+    plot_info.append(('Validation Set', range(0,len(data.coef)), V))
+
+
+    for (l,x,y) in plot_info : plt.plot(x, y, label=l)
+    plt.title(f"Learning Curve \n {m} samples | rate {r} | {t} sec | batch {b}")
+    plt.xlabel(f"Iterations (x{s})")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.show()
+
 
 
 def learning_with_history(history):
