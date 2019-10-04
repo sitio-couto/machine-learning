@@ -101,7 +101,7 @@ def overfitting(X, Y, Xv, Yv, n=(0,3073), m=1000):
     C = []
     V = []
     print("Architecture:", arc)
-    model = nr.Network([feat,feat,out], seed=23)
+    model = nr.Network(arc, seed=23)
     data = model.train(X, Y, type='m', t_lim=t, e_lim=e, rate=r, mb_size=b, sampling=s)
     for T in data.coef : 
         C.append(nr.accuracy(X,Y,T))

@@ -198,13 +198,14 @@ class Network:
         
         return grad
 
-    def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, sampling=0):
+    def train(self, X, Y, type='m', opt=None, t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, sampling=0):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
             X (Float 2dArray): The coeficient matrix.
             Y (Float 2dArray): The results matrix.
-            type (int): The choice of descent ('s'-stoch|'m'-mini|'b'-batch).
+            type (int): The choice of descent ('s'-stoch|'m'-mini|'b'-batch)
+            opt (String): Selects the optimizer for the decent (None|adadelta)
 
         Returns:
             Meta : Class containing the runtime info.
@@ -212,19 +213,19 @@ class Network:
         # Initializes epochs metadata class
         batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
         data = Meta(self.theta, Y.shape[1], batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
-        # optmizer = Optimizer()
+        optmizer = Optimizer(rate,choice=opt, T=self.theta, batch=mb_size)
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
             # Getting new Thetas
             b = data.get_batch() # Get indexes for mini batch
-            grad = self.backprop(X[:,b], Y[:,b])
-            # grad = self.Optimizer.optimize(grad)
-
-            # Update coefficients
-            for i in range(len(grad)): 
-                self.theta[i] = self.theta[i] - rate*grad[i] 
+            grad = self.backprop(X[:,b], Y[:,b])    
+            delta = optmizer.optimize(grad)
             
+            # Update coefficients
+            for i in range(len(delta)): 
+                self.theta[i] += delta[i]
+
             change = data.update(self.theta)
             if change:
                 loss = self.cost(X,Y)
@@ -306,7 +307,7 @@ class Network:
 #############################################################################
 
 class Optimizer:
-    def __init__(self, choice=None, T=0, batch=0):
+    def __init__(self, rate, choice=None, T=0, batch=0):
         self.choice = choice
     
         if choice=='adadelta':
@@ -316,24 +317,31 @@ class Optimizer:
             self.avg = [np.zeros(t.shape) for t in T]
             self.delta = [np.zeros(t.shape) for t in T]
         else:
-            print("Invalid Optimizer.")
-            
+            self.rate = rate
         
     def optimize(self, grad):
         
         if self.choice=='adadelta':
-            grad = adadelta(grad)
-    
-        return grad
+            delta = adadelta(grad)
+        else: # Vanilla
+            delta = [-self.rate*g for g in grad]
+  
+        return delta
 
     # Adadalta.
-    def adadelta(self,  grad, sqrs, deltas, rho, batch_size):
-        for (g,avg,delta) in zip(grad, self.avg, self.delta):
-            avg = self.decay*avg + (1-self.decay)*(g/self.batch)**2
-            new_delta = np.sqrt(delta+self.e)/np.sqrt(rmse+self.e)
-            new_delta *= grad
-            deltas = self.decay*delta + (1-self.decay)*new_delta**2
-            grad = cur_delta
+    def adadelta(self, grad):
+        eps = self.e
+        decay = self.decay
+        batch = self.batch
+        for i,(g,avg,delta) in enumerate(zip(grad, self.avg, self.delta)):
+            # Calculate new optimized delta
+            avg = decay*avg + (1-decay)*np.square(g/batch)
+            new_delta = -(np.sqrt(delta+eps)/np.sqrt(avg+eps))*g
+            # Updates for next iteration
+            self.avg[i] = avg
+            self.delta[i] = decay*delta + (1-decay)*new_delta**2
+
+        return new_delta
 
 ###################################################
 def softmax(x):
