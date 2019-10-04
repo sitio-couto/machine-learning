@@ -119,8 +119,7 @@ class Network:
             cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
         elif self.f == 'sm': # Use softmax cost
             cost_mat = softmax(H)
-            #correct_mat = cost_mat[np.arange(Y.size), Y]
-            cost = (-Y * np.log(cost_mat+e)).mean()
+            cost = (-Y * np.log(cost_mat+e)).sum(axis=0).mean()
 
         # Calculate regularization, if parameter is set
         if self.reg_lambda : reg = self.reg_lambda*(sum(map(fun, self.theta))/(2*m))
