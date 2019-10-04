@@ -10,41 +10,35 @@ def histogram(classes, amount=10):
     #plt.grid()
     plt.show()
 
-def learning_curves(X, Y, n=(0,3073), m=100):
+def sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073), m=1000):
     plot_info = []
 
-    samples = rd.sample(range(Y.shape[1]),m)
+    samples = rd.sample(range(Y.shape[1]), m)
     X = X[n[0]:n[1],samples]
     Y = Y[:,samples]
     feat = X.shape[0]
     out = Y.shape[0]
 
-    l = 2
-    t = 1800
-    e = 50
-    mbs = 0.1
-
-    br = 0.05
-    mr = 0.01
-    sr = 0.001
-
-    first_theta = nr.Network([feat,feat,out], l=l).theta
-
-    methods = ['m']
-    rates = [mr]
-    titles = [f'Mini {100*mbs}% (rate {rates[0]})']
+    e=50
+    t=3600
+    r=0.01
+    b=256
+    s = 50
+    
+    func = ['lg','sm']
+    titles = ['Sigmoid','Softmax']
 
     for i,title in enumerate(titles):
         C = []
-        model = nr.Network([feat,feat,out], T=first_theta, l=2)
-        data = model.train(X, Y, type=methods[i], t_lim=t, e_lim=e, rate=rates[i], mb_size=int(np.ceil(X.shape[1]*mbs)), analisys=True)
-        for T in data.epochs_coef : C.append(nr.cost(X,Y,T))
-        plot_info.append((title, range(0,data.epochs_count+1), C))
+        model = nr.Network([feat,feat,out],  f=func[i], seed=23)
+        data = model.train(X, Y, type='m', t_lim=t, e_lim=e, rate=r, mb_size=b, sampling=s)
+        for T in data.coef : C.append(nr.accuracy(X,Y,T))
+        plot_info.append((title, range(0,len(data.coef)), C))
 
     for (l,x,y) in plot_info : plt.plot(x, y, label=l)
-    plt.title(f"Learning Curves (with {m} samples)")
-    plt.xlabel(f"Epochs (limit of {t}s)")
-    plt.ylabel("Cost")
+    plt.title(f"Learning Curve \n {m} samples | rate 0.01 | 300 sec | batch 256")
+    plt.xlabel(f"Iterations (x{s})")
+    plt.ylabel("Accuracy")
     plt.legend()
     plt.show()
     

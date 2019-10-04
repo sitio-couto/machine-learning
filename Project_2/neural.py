@@ -27,8 +27,8 @@ class Meta:
         
         # If analisys data will be kept, saves time and thetas
         if (self.sampling):
-            self.epochs_coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
-            self.epochs_time = [0.0]   # Marks when a ecpoch was complete
+            self.coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
+            self.time = [0.0]   # Marks when a ecpoch was complete
 
     def update(self, T):
         '''Updates hyperparameters (epoch count, samples ramdomization)
@@ -50,8 +50,8 @@ class Meta:
         # Data for further analisys (Consumes time and memory)
         if (self.sampling and self.iters//self.sampling) :
             self.iters = 0
-            self.epochs_time.append(time() - self.start_time) # Adds time until epoch is done
-            self.epochs_coef.append(deepcopy(T)) # Adds current epoch cost
+            self.time.append(time() - self.start_time) # Adds time until epoch is done
+            self.coef.append(deepcopy(T)) # Adds current epoch cost
 
     def get_batch(self):
         '''Get samples indexes for the next batch'''
@@ -191,7 +191,7 @@ class Network:
         
         return delta
 
-    def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, analisys=False):
+    def train(self, X, Y, type='m', t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, sampling=0):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
@@ -204,7 +204,7 @@ class Network:
         '''
         # Initializes epochs metadata class
         batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
-        data = Meta(self.theta, Y.shape[1], batch_size, sampling=4000) # Saves hyperparameters and other info for analisys 
+        data = Meta(self.theta, Y.shape[1], batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -244,7 +244,7 @@ class Network:
             out_layer[:,s:e] += self.forward(X[:,s:e])
         return out_layer
 
-    def accuracy(self, X, Y):
+    def accuracy(self, X, Y, T=0):
         '''Caculates the cost for a set of samples in the current network
         
             Parameters:
@@ -336,6 +336,62 @@ def cost(X, Y, T, l=0):
         cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
         regularization = l*(sum(map(fun, T))/(2*m))
         return cost + regularization
+
+def accuracy(X, Y, T):
+    '''Caculates the cost for a set of samples in the current network
+    
+        Parameters:
+            X (Float 2dArray): NxM matrix with N input features and M samples
+            Y (Float 2dArray): NxM matrix with the expected M output layers
+        
+        Returns:
+            float : Percentage of correct predictions for the M samples
+    '''
+    m = Y.shape[1] 
+    H = frag_forward(X, 10, T)
+    H = H.argmax(axis=0)
+    Y = Y.argmax(axis=0)
+    hits = (H==Y).sum()
+    return hits*100/m
+
+def forward(features, T, nodes=0):
+    '''Execute the forward propagation using the defined thetas
+    
+    Parameters: 
+        features (numpy.ndarray) : Column vector with input features (without bias)
+        nodes (list) : if instanciated, saves the nodes activation values for every layer
+
+    Returns:
+        numpy.ndarray : Array with the propagated value for the output layer
+    '''
+    m = features.shape[1] # Get amount of samples to be propagated
+
+    for table in T :
+        features = np.insert(features, 0, 1, axis=0)
+        if isinstance(nodes, list) : nodes += [features] 
+        features = sigmoid(table.dot(features))
+
+    if isinstance(nodes, list) : nodes += [features]
+    return features
+
+def frag_forward(X, parts, T):
+    '''Wrapper for the forward propagation which splits the M samples in slices
+        Prevents numpy memory spikes during large matrix multiplications           
+
+    Parameters:
+        X (Float 2dArray): NxM matrix with N input feratures and M samples
+        type (int): The choice of descent ('s'-stoch|'m'-mini|'b'-batch).
+
+    Returns:
+        numpy.ndarray : Array with the propagated value for the output layer
+    '''
+    m = X.shape[1]
+    size = int(np.ceil(m/parts)) # Get size of each batch
+    out_layer = np.zeros((T[-1].shape[0],m)) # Prealocate output layer
+    batchs = [i*size for i in range(int(np.ceil(parts)+1))] # Slices indexes
+    for (s,e) in zip(batchs[:-1], batchs[1:]): # Propagate for each slice
+        out_layer[:,s:e] += forward(X[:,s:e], T)
+    return out_layer
 
 # # Validation with "and" & "or" operations
 # X = np.array([[0,0,1,1],[0,1,0,1]])
