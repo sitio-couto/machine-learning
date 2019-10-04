@@ -60,3 +60,15 @@ def out_layers(array):
        new_arr[i,j] = 1
 
     return new_arr
+
+def monochrome(imgs_vec, ch_len, ch_axis=0):
+    if ch_axis==0:
+        R = imgs_vec[:ch_len,:]*0.2989
+        G = imgs_vec[ch_len:ch_len*2,:]*0.5870
+        B = imgs_vec[ch_len*2:ch_len*3,:]*0.1140
+    elif ch_axis==1:
+        R = imgs_vec[:,:ch_len]*0.2989
+        G = imgs_vec[:,ch_len:ch_len*2]*0.5870
+        B = imgs_vec[:,ch_len*2:ch_len*3]*0.1140
+    
+    return R+G+B
