@@ -5,8 +5,8 @@ def get_stats(data, choice=1):
     
     # Stats for normalization
     if choice == 1 or choice == 3:
-        mins = np.apply_along_axis(np.amin, 0, data).astype('float16')
-        maxs = np.apply_along_axis(np.amax, 0, data).astype('float16')
+        mins = np.apply_along_axis(np.amin, 0, data).astype('int16')
+        maxs = np.apply_along_axis(np.amax, 0, data).astype('int16')
         ranges = maxs - mins
     if choice == 2 or choice == 3:
         means = np.apply_along_axis(np.mean, 0, data).astype('float16')

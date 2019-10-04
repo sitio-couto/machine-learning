@@ -30,14 +30,17 @@ def log(x, bound=1e-16):
 def gd_step(X, Y, T, Y_prob, alpha):
     return T - alpha * cost_derivative(X, Y, Y_prob)
 
-def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=100):
+def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.01, e_lim=300):
     
     # First losses and scores
     Y_prob = prob(X, T)
     Y_v_prob = prob(X_v, T)
-    
+    loss = cost(Y, Y_prob)
     best_loss = cost(Y_v, Y_v_prob)
+
+    # History
     best_T = T.copy()
+    history = {'cost': [loss], 'v_cost': [best_loss]}
     
     # Descent
     for i in range(e_lim):
@@ -58,6 +61,10 @@ def gradient_descent(X, Y, X_v, Y_v, T, alpha=0.001, e_lim=100):
             best_loss = v_loss
             best_T = T.copy()
         
+        # History
+        history['cost'].append(loss)
+        history['v_cost'].append(v_loss)
         print(f"Epoch {i+1:04d}/{e_lim:04d}", f"loss: {loss:.4f} | val loss: {v_loss:.4f}")
-        
-    return best_T
+    
+    print()
+    return best_T, history
