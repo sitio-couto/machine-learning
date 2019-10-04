@@ -58,7 +58,7 @@ def test_logistic(X, Y, T, classes):
     print()
 
 #### NEURAL NETWORK FUNCTIONS ####
-def neural_network(X,Y):
+def neural_network(X, Xv, Y, Yv):
     '''
         Wrapper for neural network
     '''
@@ -80,7 +80,7 @@ def run_neural_network(X, Y):
     # Builds network object
     feat = Xn.shape[0]
     out = Yn.shape[0]
-    model = nr.Network([feat,feat,out], f="sg")
+    model = nr.Network([feat,feat,out], f="sm")
     print('Created model')
     print("Initial Accuracy:", model.accuracy(Xn, Yn))
     
@@ -91,11 +91,11 @@ def run_neural_network(X, Y):
     
     return Xn, Yn, model
 
-def test_neural_network(Xn, Yn, model):
+def test_neural_network(X, Y, model):
     '''
         Function to test neural network.
     '''
-    print("Trained Accuracy:", model.accuracy(Xn, Yn))
+    print("Trained Accuracy:", model.accuracy(X, Y))
 
     # Neural Network descent visualization
     #vis.learning_curves(Xn, Yn, m=80000)
