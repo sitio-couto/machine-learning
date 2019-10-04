@@ -58,6 +58,8 @@ class Meta:
             self.iters = 0
             self.time.append(time() - self.start_time) # Adds time until epoch is done
             self.coef.append(deepcopy(T)) # Adds current epoch cost
+            
+        return change
 
     def get_batch(self):
         '''Get samples indexes for the next batch'''
@@ -117,7 +119,9 @@ class Network:
         if self.f == 'sg': # Use sigmoid cost
             cost = -(Y*np.log(H+e) + (1-Y)*np.log((1+e)-H)).sum()/m
         elif self.f == 'sm': # Use softmax cost
-            cost = (-Y * np.log(softmax(H)+e)).mean()
+            cost_mat = softmax(H)
+            #correct_mat = cost_mat[np.arange(Y.size), Y]
+            cost = (-Y * np.log(cost_mat+e)).mean()
 
         # Calculate regularization, if parameter is set
         if self.reg_lambda : reg = self.reg_lambda*(sum(map(fun, self.theta))/(2*m))

@@ -87,7 +87,7 @@ def run_neural_network(X, Y):
     # Train model
     batch_size = int(np.ceil(Xn.shape[1]*0.1))
     batch_size = 256
-    data = model.train(Xn, Yn, type='m', mb_size=batch_size, e_lim=2, t_lim=200)
+    data = model.train(Xn, Yn, type='m', mb_size=batch_size, e_lim=10, t_lim=200)
     
     return Xn, Yn, model
 
