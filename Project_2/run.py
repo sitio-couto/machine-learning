@@ -94,7 +94,7 @@ def run_neural_network(X, Xv, Y, Yv):
     
     # Train model
     batch_size = 1024
-    data = model.train(Xn, Yn, Xvn, Yvn, type='m', mb_size=batch_size, e_lim=500, t_lim=900, rate=0.001, opt='adam', betas=(0.9,0.999))
+    data = model.train(Xn, Yn, Xvn, Yvn, type='m', mb_size=batch_size, e_lim=500, t_lim=3600, rate=0.001, opt='adam', betas=(0.9,0.999))
     
     return Xn, Yn, model
 

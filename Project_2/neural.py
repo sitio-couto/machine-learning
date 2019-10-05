@@ -299,8 +299,6 @@ class Network:
         '''
         
         H = self.frag_forward(X, 10)
-        if self.f == 'sm':
-            H = softmax(H)
         H = H.argmax(axis=0)
         return H
 
