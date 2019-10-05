@@ -62,7 +62,7 @@ def neural_network(X, Xv, Y, Yv, classes):
     '''
         Wrapper for neural network
     '''
-    Xn, Yn, model = run_neural_network(X, Y)
+    Xn, Yn, model = run_neural_network(X, Xv, Y, Yv)
     
     print("Training Metrics:")
     test_neural_network(Xn, Y, model, classes)
@@ -70,7 +70,7 @@ def neural_network(X, Xv, Y, Yv, classes):
     print("Validation Metrics:")
     test_neural_network(Xv.T, Yv, model, classes)
 
-def run_neural_network(X, Y):
+def run_neural_network(X, Xv, Y, Yv):
     '''
         Runs fully-connected neural network.
     '''
@@ -80,19 +80,21 @@ def run_neural_network(X, Y):
     # Adjusting input matrices (assumes X is normalized)
     Xn = X.T
     Yn = norm.out_layers(Y)
+    Xvn = Xv.T
+    Yvn =norm.out_layers(Yv)
     print("Handled input")
     
     # Builds network object
     feat, out = Xn.shape[0], Yn.shape[0]
     h1, h2 = 256, 128
     arc = [feat, h1, h2, out]
-    model = nr.Network(arc, f="sg", seed=23)
+    model = nr.Network(arc, f="sg", seed=23, reg_lambda=0.002)
     print('Created model')
     print("Initial Accuracy:", model.accuracy(Xn, Yn))
     
     # Train model
-    batch_size = 256
-    data = model.train(Xn, Yn, type='m', mb_size=batch_size, e_lim=500, t_lim=200, rate=0.001, opt='adam', betas=(0.9,0.999))
+    batch_size = 1024
+    data = model.train(Xn, Yn, Xvn, Yvn, type='m', mb_size=batch_size, e_lim=500, t_lim=900, rate=0.001, opt='adam', betas=(0.9,0.999))
     
     return Xn, Yn, model
 

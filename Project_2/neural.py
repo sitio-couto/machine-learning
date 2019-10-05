@@ -198,7 +198,7 @@ class Network:
         
         return grad
 
-    def train(self, X, Y, type='m', opt=None, t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, sampling=0, betas=(0,0)):
+    def train(self, X, Y, Xv, Yv, type='m', opt=None, t_lim=7000, e_lim=100000, rate=0.01, mb_size=32, sampling=0, betas=(0,0)):
         '''Trains the model until one of the given limits are reached
 
         Parameters:
@@ -214,6 +214,8 @@ class Network:
         batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
         data = Meta(self.theta, Y.shape[1], batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
         optmizer = Optimizer(rate, choice=opt, T=self.theta, batch=mb_size, beta=betas)
+        best_loss = 0
+        best_T = self.theta.copy()
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -227,16 +229,26 @@ class Network:
                 self.theta[i] += delta[i]
 
             change = data.update(self.theta)
+            
+            # Epoch change
             if change:
                 loss = self.cost(X,Y)
-                print(f"Epoch {data.epochs_count:04d}/{e_lim:04d}", f"loss: {loss:.4f}")
+                v_loss=self.cost(Xv,Yv)
+                
+                # Updates best thetas
+                if best_loss > v_loss:
+                    best_loss = v_loss
+                    best_T = self.theta.copy()
+                print(f"Epoch {data.epochs_count:04d}/{e_lim:04d}", f"loss: {loss:.4f} | val loss: {v_loss:.4f}")
             
             # Check termination
             if data.epochs_count >= e_lim : 
-                print("NOTE: Epochs limit for descent reached.")       
+                print("NOTE: Epochs limit for descent reached.")  
+                self.theta = best_T     
                 return data
             
         print("NOTE: Time limit for descent exceded.")
+        self.theta = best_T
         return data
 
     def frag_forward(self, X, parts):
@@ -378,7 +390,6 @@ class Optimizer:
         new_deltas = []
         
         for i,g in enumerate(grad):
-            g = g/self.batch
         
             # Calculating moving averages
             mt[i] = self.beta[0]*mt[i] + (1-self.beta[0])*g

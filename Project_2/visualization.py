@@ -128,14 +128,14 @@ def optimization(X, Y, Xv, Yv, m=80000):
 
     # Set constant hyperparameters
     e=50
-    t=40
-    r=0.005
+    t=200
+    r=0.001
     b=1024
     s=10
     
     # Variable aspects/hyperparams per plot
-    opt = ['adadelta', None]
-    title = ['Adadelta', 'Vanilla']
+    opt = ['adam','adadelta', None]
+    title = ['Adam', 'Adadelta', 'Vanilla']
     arc = [3072, 256, 128, 10]
 
     print("Architecture:", arc)
