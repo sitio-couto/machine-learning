@@ -117,6 +117,50 @@ def overfitting(X, Y, Xv, Yv, n=(0,3073), m=1000):
     plt.legend()
     plt.show()
 
+def optimization(X, Y, Xv, Yv, m=80000):
+    plot_info = []
+
+    samples = rd.sample(range(Y.shape[1]), m)
+    X = X[:,samples]
+    Y = Y[:,samples]
+    feat = X.shape[0]
+    out = Y.shape[0]
+
+    # Set constant hyperparameters
+    e=50
+    t=40
+    r=0.005
+    b=1024
+    s=10
+    
+    # Variable aspects/hyperparams per plot
+    opt = ['adadelta', None]
+    title = ['Adadelta', 'Vanilla']
+    arc = [3072, 256, 128, 10]
+
+    print("Architecture:", arc)
+    for i in range(len(opt)):
+        C = []
+        model = nr.Network(arc, seed=23)
+        data = model.train(X, Y, 
+                            opt=opt[i], 
+                            type='m', 
+                            t_lim=t, 
+                            e_lim=e, 
+                            rate=r, 
+                            mb_size=b, 
+                            sampling=s)
+        for T in data.coef : C.append(nr.accuracy(X,Y,T))
+        plot_info.append((title[i], range(0,len(data.coef)), C))
+    # plot_info.append(('Validation Set', range(0,len(data.coef)), V))
+
+
+    for (l,x,y) in plot_info : plt.plot(x, y, label=l)
+    plt.title(f"Learning Curve \n {m} samples | rate {r} | {t} sec | batch {b}")
+    plt.xlabel(f"Iterations (x{s})")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.show()
 
 
 def learning_with_history(history):

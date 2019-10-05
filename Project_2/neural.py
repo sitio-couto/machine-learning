@@ -213,7 +213,7 @@ class Network:
         # Initializes epochs metadata class
         batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
         data = Meta(self.theta, Y.shape[1], batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
-        optmizer = Optimizer(rate,choice=opt, T=self.theta, batch=mb_size)
+        optmizer = Optimizer(rate, choice=opt, T=self.theta, batch=mb_size)
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -223,7 +223,7 @@ class Network:
             delta = optmizer.optimize(grad)
             
             # Update coefficients
-            for i in range(len(delta)): 
+            for i in range(len(delta)):
                 self.theta[i] += delta[i]
 
             change = data.update(self.theta)
@@ -329,7 +329,7 @@ class Optimizer:
     
         if choice=='adadelta':
             self.e = 10**-6
-            self.decay = 0.9
+            self.decay = 0.7
             self.batch = batch 
             self.avg = [np.zeros(t.shape) for t in T]
             self.delta = [np.zeros(t.shape) for t in T]
@@ -339,26 +339,27 @@ class Optimizer:
     def optimize(self, grad):
         
         if self.choice=='adadelta':
-            delta = adadelta(grad)
+            delta = self.adadelta(grad)
         else: # Vanilla
             delta = [-self.rate*g for g in grad]
   
         return delta
 
-    # Adadalta.
     def adadelta(self, grad):
         eps = self.e
         decay = self.decay
         batch = self.batch
+        new_deltas = []
         for i,(g,avg,delta) in enumerate(zip(grad, self.avg, self.delta)):
             # Calculate new optimized delta
-            avg = decay*avg + (1-decay)*np.square(g/batch)
-            new_delta = -(np.sqrt(delta+eps)/np.sqrt(avg+eps))*g
+            g = g/batch
+            avg = decay*avg + (1-decay)*np.square(g)
+            new_deltas.append(-(np.sqrt(delta+eps)/np.sqrt(avg+eps))*g)
             # Updates for next iteration
             self.avg[i] = avg
-            self.delta[i] = decay*delta + (1-decay)*new_delta**2
+            self.delta[i] = decay*delta + (1-decay)*np.square(new_deltas[-1])
 
-        return new_delta
+        return new_deltas
 
 ###################################################
 def softmax(x):

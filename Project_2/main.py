@@ -32,13 +32,7 @@ print("Validation Data Normalized!")
 #run.logistic(X, X_v, Y, Y_v, 0.01, 300, classes)
 
 #### NEURAL NETWORK ####
-run.neural_network(X, X_v, Y, Y_v, classes)
+# run.neural_network(X, X_v, Y, Y_v, classes)
 
 #### VISUALIZATION ####
-#   X = X.T
-#Y = norm.out_layers(Y)
-#Xv = X_v.T
-#Yv = norm.out_layers(Y_v)
-# visu.sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073), m=10000)
-# visu.comparing_models(X, Y, Xv, Yv, n=(0,3073))
-#visu.overfitting(X, Y, Xv, Yv, m=80000)
+run.visualize_data(X, Y, X_v, Y_v)
