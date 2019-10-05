@@ -112,5 +112,12 @@ def test_neural_network(X, Y, model, classes):
     print(f'F1-Score per class: {met["f1"]} (avg. f1-score: {met["f1"].mean():.4f})')
     print()
     
-    # Neural Network descent visualization
-    #vis.learning_curves(Xn, Yn, m=80000)
+def visualize_data(X, Y, Xv, Yv):
+    X = X.T
+    Y = norm.out_layers(Y)
+    Xv = Xv.T
+    Yv = norm.out_layers(Yv)
+    # visu.sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073))
+    # visu.comparing_models(X, Y, Xv, Yv, n=(0,3073))
+    #visu.overfitting(X, Y, Xv, Yv)
+    vis.optimization(X, Y, Xv, Yv)
