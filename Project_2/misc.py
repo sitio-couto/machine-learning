@@ -28,8 +28,8 @@ def recall(confusion):
     return diag/confusion.sum(1)
 
 # F1 Score per class from precision and recall
-def f1_score(prec, rec):
-    return 2*prec*rec/(prec+rec)
+def f1_score(prec, rec, bound=1):
+    return 2*prec*rec/(prec+rec+bound)
     
 
 # Function to calculate metrics for evaluation
