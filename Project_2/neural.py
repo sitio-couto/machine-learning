@@ -9,15 +9,17 @@ from copy import deepcopy
 seed(datetime.now())
 
 class Meta:
-    def __init__(self, T, m, batch_size, sampling=0):
+    def __init__(self, T, m, l, vl, batch_size, sampling=0):
         self.index = 0  # Saves the position in the random list
         self.iters = 0  # Counts the number of weights updates 
         self.bound = m  # Total amount of samples
+        self.best_loss = 0
+        self.best_T = T.copy()
         self.epochs_count = 0      # Amount of completed epochs
         self.start_time = time()   # Training start time
         self.sampling = sampling   # Number of iterations which samples are collected
         self.samples_list = list(range(m)) # Radomized samples for stochastic methods
-        self.history = {'loss':[], 'v_loss':[]}
+        self.history = {'loss':[l], 'v_loss':[vl]}
         shuffle(self.samples_list)
         
         # Checks it the batch is an integer (n samples) or percentage and, if 
@@ -29,10 +31,10 @@ class Meta:
         
         # If analysis data will be kept, saves time and thetas
         if (self.sampling):
-            self.coef = [deepcopy(T)]     # Keeps trained coeficients per epoch
+            self.coef = [deepcopy(T)] # Keeps trained coeficients per epoch
             self.time = [0.0]   # Marks when a ecpoch was complete
 
-    def update(self, T):
+    def update(self, cost, samples_sets, T, e_lim):
         '''Updates hyperparameters (epoch count, samples ramdomization)
         
             Parameters:
@@ -52,7 +54,16 @@ class Meta:
             self.index = 0             # Reset samples index
             self.epochs_count += 1     # Count finished epoch
             shuffle(self.samples_list) # Reshuffle samples
-            change = True              # Returns finished epoch
+            (X,Y,Xv,Yv) = samples_sets
+            loss = cost(X,Y)
+            v_loss = cost(Xv,Yv)
+            self.update_history(loss, v_loss)
+            
+            # Updates best thetas
+            if self.best_loss > v_loss:
+                self.best_loss = v_loss
+                self.best_T = self.theta.copy()
+            print(f"Epoch {self.epochs_count:04d}/{e_lim:04d}", f"loss: {loss:.4f} | val loss: {v_loss:.4f}")
 
         # Data for further analysis (Consumes time and memory)
         if (self.sampling and self.iters//self.sampling) :
@@ -217,10 +228,8 @@ class Network:
         '''
         # Initializes epochs metadata class
         batch_size = {'b':Y.shape[1],'m':mb_size,'s':1}.get(type) # Get number of samples
-        data = Meta(self.theta, Y.shape[1], batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
+        data = Meta(self.theta, Y.shape[1], self.cost(X,Y), self.cost(Xv,Yv), batch_size, sampling=sampling) # Saves hyperparameters and other info for analisys 
         optmizer = Optimizer(rate, choice=opt, T=self.theta, batch=mb_size, beta=betas)
-        best_loss = 0
-        best_T = self.theta.copy()
 
         # Starting descent
         while (time() - data.start_time) <= t_lim:
@@ -233,28 +242,16 @@ class Network:
             for i in range(len(delta)):
                 self.theta[i] += delta[i]
 
-            change = data.update(self.theta)
-            
-            # Epoch change
-            if change:
-                loss = self.cost(X,Y)
-                v_loss=self.cost(Xv,Yv)
-                data.update_history(loss, v_loss)
-                
-                # Updates best thetas
-                if best_loss > v_loss:
-                    best_loss = v_loss
-                    best_T = self.theta.copy()
-                print(f"Epoch {data.epochs_count:04d}/{e_lim:04d}", f"loss: {loss:.4f} | val loss: {v_loss:.4f}")
+            data.update(self.cost, (X,Y,Xv,Yv), self.theta, e_lim)
             
             # Check termination
             if data.epochs_count >= e_lim : 
                 print("NOTE: Epochs limit for descent reached.")  
-                self.theta = best_T     
+                self.theta = data.best_T     
                 return data
             
         print("NOTE: Time limit for descent exceded.")
-        self.theta = best_T
+        self.theta = data.best_T
         return data
 
     def frag_forward(self, X, parts):

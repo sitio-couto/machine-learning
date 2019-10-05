@@ -168,13 +168,6 @@ def optimization(X, Y, Xv, Yv, m=80000):
     plt.show()
 
 def optimization_cost(X, Y, Xv, Yv, m=80000):
-    plot_info = []
-
-    samples = rd.sample(range(Y.shape[1]), m)
-    X = X[:,samples]
-    Y = Y[:,samples]
-    feat = X.shape[0]
-    out = Y.shape[0]
 
     # Set constant hyperparameters
     e=50
@@ -187,9 +180,10 @@ def optimization_cost(X, Y, Xv, Yv, m=80000):
     title = ['Adam', 'Adadelta', 'Vanilla']
     arc = [3072, 256, 128, 10]
 
+    plot_info = []
     print("Architecture:", arc)
     for i in range(len(title)):
-        model = nr.Network(arc, seed=23)
+        model = nr.Network(arc, seed=23) # Seed ensures same initial thetas
         data = model.train(X, Y, Xv, Yv,
                             opt=opt[i], 
                             type='m', 
@@ -198,13 +192,13 @@ def optimization_cost(X, Y, Xv, Yv, m=80000):
                             rate=r, 
                             mb_size=b, 
                             betas=(0.9,0.999))
-        plot_info.append((title[i], range(0,data.epochs_count), data.history['loss']))
-        plot_info.append((title[i]+'(Validation)', range(0,data.epochs_count), data.history['v_loss']))
-        print(title[i]+':', model.accuracy(Xv,Yv))
+        plot_info.append((title[i], range(0,data.epochs_count+1), data.history['loss']))
+        plot_info.append((title[i]+'(Validation)', range(0,data.epochs_count+1), data.history['v_loss']))
+        print(title[i]+':', model.accuracy(Xv,Yv), '%')
 
 
     for (l,x,y) in plot_info : plt.plot(x, y, label=l)
-    plt.title(f"Learning Curve \n {m} samples | {t} sec")
+    plt.title(f"Learning Curve \n rate{r} | {t} sec | batch {b}")
     plt.xlabel("Epochs")
     plt.ylabel("Cost")
     plt.legend()

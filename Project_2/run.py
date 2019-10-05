@@ -122,4 +122,4 @@ def visualize_data(X, Y, Xv, Yv):
     # visu.sigmoid_vs_softmax(X, Y, Xv, Yv, n=(0,3073))
     # visu.comparing_models(X, Y, Xv, Yv, n=(0,3073))
     #visu.overfitting(X, Y, Xv, Yv)
-    vis.optimization(X, Y, Xv, Yv)
+    vis.optimization_cost(X, Y, Xv, Yv)
