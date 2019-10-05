@@ -167,6 +167,48 @@ def optimization(X, Y, Xv, Yv, m=80000):
     plt.legend()
     plt.show()
 
+def optimization_cost(X, Y, Xv, Yv, m=80000):
+    plot_info = []
+
+    samples = rd.sample(range(Y.shape[1]), m)
+    X = X[:,samples]
+    Y = Y[:,samples]
+    feat = X.shape[0]
+    out = Y.shape[0]
+
+    # Set constant hyperparameters
+    e=50
+    t=200
+    r=0.001
+    b=1024
+    
+    # Variable aspects/hyperparams per plot
+    opt = ['adam','adadelta', None]
+    title = ['Adam', 'Adadelta', 'Vanilla']
+    arc = [3072, 256, 128, 10]
+
+    print("Architecture:", arc)
+    for i in range(len(title)):
+        model = nr.Network(arc, seed=23)
+        data = model.train(X, Y, Xv, Yv,
+                            opt=opt[i], 
+                            type='m', 
+                            t_lim=t, 
+                            e_lim=e, 
+                            rate=r, 
+                            mb_size=b, 
+                            betas=(0.9,0.999))
+        plot_info.append((title[i], range(0,data.epochs_count), data.history['loss']))
+        plot_info.append((title[i]+'(Validation)', range(0,data.epochs_count), data.history['v_loss']))
+        print(title[i]+':', model.accuracy(Xv,Yv))
+
+
+    for (l,x,y) in plot_info : plt.plot(x, y, label=l)
+    plt.title(f"Learning Curve \n {m} samples | {t} sec")
+    plt.xlabel("Epochs")
+    plt.ylabel("Cost")
+    plt.legend()
+    plt.show()
 
 def learning_with_history(history):
     '''

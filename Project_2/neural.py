@@ -17,6 +17,7 @@ class Meta:
         self.start_time = time()   # Training start time
         self.sampling = sampling   # Number of iterations which samples are collected
         self.samples_list = list(range(m)) # Radomized samples for stochastic methods
+        self.history = {'loss':[], 'v_loss':[]}
         shuffle(self.samples_list)
         
         # Checks it the batch is an integer (n samples) or percentage and, if 
@@ -61,6 +62,10 @@ class Meta:
             
         return change
 
+    def update_history(self, loss, v_loss):
+        self.history['loss'].append(loss)
+        self.history['v_loss'].append(v_loss)
+        
     def get_batch(self):
         '''Get samples indexes for the next batch'''
         return self.samples_list[self.index : self.index+self.batch_size]
@@ -234,6 +239,7 @@ class Network:
             if change:
                 loss = self.cost(X,Y)
                 v_loss=self.cost(Xv,Yv)
+                data.update_history(loss, v_loss)
                 
                 # Updates best thetas
                 if best_loss > v_loss:
@@ -509,29 +515,4 @@ def frag_forward(X, parts, T):
         out_layer[:,s:e] += forward(X[:,s:e], T)
     return out_layer
 
-# # Validation with "and" & "or" operations
-# X = np.array([[0,0,1,1],[0,1,0,1]])
 
-# Y_and = np.array([[0,0,0,1]])
-# Y_or = np.array([[0,1,1,1]])
-# Y_xor = np.array([[1,0,0,1]])
-# Y_xnor = np.array([[0,1,1,0]])
-
-# # Do not count bias when defining architecture
-# and_op = Network([2,2,1], reg_lambda=0)
-# or_op = Network([2,2,1], reg_lambda=0) 
-# xor_op = Network([2,2,1], reg_lambda=0) 
-# xnor_op = Network([2,2,1], reg_lambda=0) 
-
-# # If does not converge, change hyperparameters
-# Ys = [Y_and,Y_or,Y_xor,Y_xnor]
-# nets = [and_op,or_op,xor_op,xnor_op]
-# t = 'm'
-# for i,name in enumerate(['AND', 'OR', 'XOR', 'XNOR']):
-#     print(f'--({name})-------------------')
-#     print("Initial cost:", nets[i].cost(X, Ys[i]))
-#     print(np.round(nets[i].forward(X)))
-#     nets[i].train(X, Ys[i], type=t, t_lim=10, e_lim=20000, mb_size=3)
-#     print("Trained cost:", cost(X, Ys[i], nets[i].theta))
-#     print(X)
-#     print(np.round(nets[i].forward(X)))
