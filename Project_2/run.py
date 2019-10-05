@@ -83,17 +83,16 @@ def run_neural_network(X, Y):
     print("Handled input")
     
     # Builds network object
-    feat = Xn.shape[0]
+    feat, out = Xn.shape[0], Yn.shape[0]
     h1, h2 = 256, 128
-    out = Yn.shape[0]
-    model = nr.Network([feat, h1, h2, out], f="sg")
+    arc = [feat, h1, h2, out]
+    model = nr.Network(arc, f="sg", seed=23)
     print('Created model')
     print("Initial Accuracy:", model.accuracy(Xn, Yn))
     
     # Train model
-    batch_size = int(np.ceil(Xn.shape[1]*0.1))
     batch_size = 256
-    data = model.train(Xn, Yn, type='m', mb_size=batch_size, e_lim=500, t_lim=1000)
+    data = model.train(Xn, Yn, type='m', mb_size=batch_size, e_lim=500, t_lim=200, rate=0.001, opt='adam', betas=(0.9,0.999))
     
     return Xn, Yn, model
 
