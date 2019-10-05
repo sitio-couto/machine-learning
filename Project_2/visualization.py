@@ -139,8 +139,9 @@ def optimization(X, Y, Xv, Yv, m=80000):
     arc = [3072, 256, 128, 10]
 
     print("Architecture:", arc)
-    for i in range(len(opt)):
+    for i in range(len(title)):
         C = []
+        # V = []
         model = nr.Network(arc, seed=23)
         data = model.train(X, Y, 
                             opt=opt[i], 
@@ -149,14 +150,18 @@ def optimization(X, Y, Xv, Yv, m=80000):
                             e_lim=e, 
                             rate=r, 
                             mb_size=b, 
-                            sampling=s)
-        for T in data.coef : C.append(nr.accuracy(X,Y,T))
+                            sampling=s,
+                            betas=(0.9,0.999))
+        for T in data.coef : 
+            C.append(nr.accuracy(X,Y,T))
+            # V.append(nr.accuracy(Xv,Yv,T))
         plot_info.append((title[i], range(0,len(data.coef)), C))
-    # plot_info.append(('Validation Set', range(0,len(data.coef)), V))
+        # plot_info.append((title[i]+'(Validation)', range(0,len(data.coef)), V))
+        print(title[i]+':', model.accuracy(Xv,Yv))
 
 
     for (l,x,y) in plot_info : plt.plot(x, y, label=l)
-    plt.title(f"Learning Curve \n {m} samples | rate {r} | {t} sec | batch {b}")
+    plt.title(f"Learning Curve \n {m} samples | {t} sec")
     plt.xlabel(f"Iterations (x{s})")
     plt.ylabel("Accuracy")
     plt.legend()
