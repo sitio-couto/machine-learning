@@ -326,8 +326,8 @@ class Optimizer:
         self.choice = choice
     
         if choice=='adadelta':
-            self.e = 10**-6
-            self.decay = 0.7
+            self.e = 10**-8
+            self.decay = 0.99
             self.batch = batch 
             self.avg = [np.zeros(t.shape) for t in T]
             self.delta = [np.zeros(t.shape) for t in T]
@@ -350,7 +350,6 @@ class Optimizer:
         new_deltas = []
         for i,(g,avg,delta) in enumerate(zip(grad, self.avg, self.delta)):
             # Calculate new optimized delta
-            g = g/batch
             avg = decay*avg + (1-decay)*np.square(g)
             new_deltas.append(-(np.sqrt(delta+eps)/np.sqrt(avg+eps))*g)
             # Updates for next iteration
