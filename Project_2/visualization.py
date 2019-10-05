@@ -128,10 +128,10 @@ def optimization(X, Y, Xv, Yv, m=80000):
 
     # Set constant hyperparameters
     e=50
-    t=10
+    t=300
     r=0.001
     b=256
-    s=10
+    s=60
     
     # Variable aspects/hyperparams per plot
     opt = [None, 'adadelta','adam']
@@ -150,7 +150,8 @@ def optimization(X, Y, Xv, Yv, m=80000):
                             e_lim=e, 
                             rate=r, 
                             mb_size=b, 
-                            sampling=s)
+                            sampling=s,
+                            betas=(0.9,0.999))
         for T in data.coef : 
             C.append(nr.accuracy(X,Y,T))
             # V.append(nr.accuracy(Xv,Yv,T))
