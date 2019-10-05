@@ -32,7 +32,7 @@ print("Validation Data Normalized!")
 #run.logistic(X, X_v, Y, Y_v, 0.01, 300, classes)
 
 #### NEURAL NETWORK ####
-#run.neural_network(X, X_v, Y, Y_v, classes)
+run.neural_network(X, X_v, Y, Y_v, classes)
 
 #### VISUALIZATION ####
-run.visualize_data(X, Y, X_v, Y_v)
+#run.visualize_data(X, Y, X_v, Y_v)
