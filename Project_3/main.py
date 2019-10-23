@@ -8,8 +8,10 @@
 import numpy as np
 from pandas import read_csv
 from keras.utils import to_categorical
+from sklearn.decomposition import PCA
 import normalization as norm
 import neural as nr
+import misc
 
 data = read_csv('Dataset/fashion-mnist_train.csv')
 Y = data['label'].to_numpy()
@@ -21,10 +23,10 @@ stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice)
 Y = to_categorical(Y)
 
-print(X)
-print(Y)
-
-arc = [300, 100]
+# Get first neural network
+arc = [300]
 dense = nr.get_neural_network_model(arc)
+
+# Train network
 dense.summary()
-dense.fit(x=X, y=Y, epochs=30, batch_size=128, validation_split=0.1)
+dense, _ = nr.train(dense, X, Y, epochs=30, batch_size=128, validation_split=0.1)
