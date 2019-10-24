@@ -1,5 +1,4 @@
 import numpy as np
-from const import *
 from keras import Model
 from keras.models import load_model
 from keras.layers import Dense, Input
@@ -9,10 +8,10 @@ from keras.regularizers import l2
 from os.path import exists
 
 # Simple neural network, generic
-def get_neural_network_model(arc, activ='relu', optimizer='adam'):
+def get_neural_network_model(arc, inp_shape, n_out, activ='relu', optimizer='adam'):
     
     # Input
-    inp = Input(shape=(IMG_HEIGHT*IMG_WIDTH, ))
+    inp = Input(shape=inp_shape)
     
     # Hidden Layers
     layer = inp
@@ -20,7 +19,7 @@ def get_neural_network_model(arc, activ='relu', optimizer='adam'):
         layer = Dense(n, activation=activ, kernel_regularizer=l2(0.001))(layer)
     
     # Output
-    out = Dense(N_CLASSES, activation='softmax', kernel_regularizer=l2(0.001))(layer)
+    out = Dense(n_out, activation='softmax', kernel_regularizer=l2(0.001))(layer)
     
     model = Model(inputs=inp, outputs=out)
     model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
