@@ -28,7 +28,7 @@ def get_neural_network_model(arc, inp_shape, n_out, activ='relu', optimizer='ada
 # Train the neural network
 def train(model, X, Y, epochs=50, batch_size=128, val_split=0.1, patience=5):
     callbacks = [
-                 EarlyStopping(monitor='val_loss', min_delta=0.001, patience=patience)
+                 EarlyStopping(monitor='val_loss', min_delta=0.001, patience=patience),
                  ModelCheckpoint(monitor='val_loss', filepath='best_model.h5', save_best_only=True)
                 ]
     

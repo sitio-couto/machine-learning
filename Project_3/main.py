@@ -30,19 +30,20 @@ dense = nr.get_neural_network_model(arc, (IMG_HEIGHT*IMG_WIDTH, ), N_CLASSES)
 
 # Train network
 dense.summary()
-dense, hist = nr.train(dense, X, Y, epochs=30, batch_size=128, validation_split=0.1)
-print('Accuracy: ', hist[-1])
+dense, hist = nr.train(dense, X, Y, epochs=30, batch_size=128, val_split=0.1)
+print('Validation Accuracy: ', np.max(hist['val_accuracy']))
 
 # PCA
 variance = [.90, .95, .85]
 pca, X = red.reduce_PCA(X, variance[0])
-print('Components:', pca.n_components_)
+n_comp = pca.n_components_
+print('Components:', n_comp)
 
 # Train with PCA
 dense = nr.get_neural_network_model(arc, (n_comp, ), N_CLASSES)
 dense.summary()
-dense, hist = nr.train(dense, X, Y, epochs=30, batch_size=128, validation_split=0.1)
-print(hist[-1])
+dense, hist = nr.train(dense, X, Y, epochs=30, batch_size=128, val_split=0.1)
+print('Validation Accuracy: ', np.max(hist['val_accuracy']))
 
 # Auto-Encoder
 
