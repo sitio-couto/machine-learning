@@ -2,7 +2,6 @@ import numpy as np
 from keras import Model
 from keras.models import load_model
 from keras.layers import Dense, Input
-from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.regularizers import l2
 from os.path import exists
@@ -26,15 +25,16 @@ def get_neural_network_model(arc, inp_shape, n_out, activ='relu', optimizer='ada
     return model
 
 # Train the neural network
-def train(model, X, Y, epochs=50, batch_size=128, val_split=0.1, patience=5):
+def train(model, X, Y, epochs=50, batch_size=128, val_split=0.1, patience=5, use_calls=True, best=True):
     callbacks = [
                  EarlyStopping(monitor='val_loss', min_delta=0.001, patience=patience),
                  ModelCheckpoint(monitor='val_loss', filepath='best_model.h5', save_best_only=True)
                 ]
     
-    history = model.fit(x=X, y=Y, epochs=epochs, batch_size=batch_size, validation_split=val_split, callbacks=callbacks).history
+    call = callbacks if use_calls else None
+    history = model.fit(x=X, y=Y, epochs=epochs, batch_size=batch_size, validation_split=val_split, callbacks=call).history
     
-    if exists('best_model.h5'):
+    if exists('best_model.h5') and best:
         model = load_model('best_model.h5')
     
     return model, history
