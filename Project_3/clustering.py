@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.cluster import KMeans, OPTICS
 
 def k_means(X, n_clusters, init='k-means++', max_iter=300, tolerance=1e-4):
@@ -10,3 +11,33 @@ def optics(X, min_samples):
     opt = OPTICS(min_samples=min_samples)
     Y = opt.fit_predict(X)
     return opt, Y
+
+def label_clusters(n_classes, Y_true, clusters):
+    '''Binds each of the clusters labels to a class label creating a prediction array
+    
+        Parameters:
+            n_classes (int): Amount of classes/clusters in the dataset/model
+            clusters (array of int): cluster associated to each sample (sample i binds to cluster x[i])
+            Y_true (array of int): class associated to each sample (sample i belongs to class x[i])
+
+        Returns:
+            Y_pred (array of int): contains the predicted class of sample i which is binded to the cluster clusters[i]
+    '''
+
+    # Create true_labelXcluster_label frequency matrix
+    count = np.zeros((n_classes, n_classes), dtype=int)
+    for i in range(n_classes):
+        for j in clusters[Y_true==i]:
+            count[i,j] += 1
+
+    # Assing a label (class) for each cluster
+    Y_pred = np.zeros(len(clusters), dtype=int)
+    while (True):
+        x = count.argmax()
+        i = x//n_classes
+        j = x%n_classes
+        if count[i,j] < 0 : break
+        count[i,:] = count[:,j] = -1
+        Y_pred[clusters==j] = i
+
+    return Y_pred
