@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.cluster import KMeans, OPTICS
+from sklearn.cluster import KMeans, OPTICS, AgglomerativeClustering
 
 def k_means(X, n_clusters, init='k-means++', max_iter=300, tolerance=1e-4):
     km = KMeans(n_clusters, init, max_iter=max_iter, tol=tolerance)
@@ -11,6 +11,10 @@ def optics(X, min_samples):
     opt = OPTICS(min_samples=min_samples)
     Y = opt.fit_predict(X)
     return opt, Y
+
+def agg_clustering(X, n_clusters, linkage='ward'):
+    aggclust = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage).fit(X)
+    return aggclust, aggclust.labels_
 
 def label_clusters(n_classes, Y_true, clusters):
     '''Binds each of the clusters labels to a class label creating a prediction array
