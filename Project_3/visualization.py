@@ -14,6 +14,12 @@ def build_confusion_matrix(n_classes, Y_true, Y_pred):
 
     return CM
 
+def clustering_accuracy(n_classes, Y_true, Y_pred):
+    CM = build_confusion_matrix(n_classes, Y_true, Y_pred)
+    total = CM.sum()
+    hit = sum(CM[range(n_classes), range(n_classes)])
+    return hit/total
+
 def histogram(pred, amount=10, model='K-Means'):
     plt.hist(pred, bins='auto')
     plt.title("Amount of images per predicted class for " + model)
