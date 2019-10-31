@@ -21,7 +21,7 @@ stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice).astype('float32')
 Y = to_categorical(Y).astype('int8')
 
-arcs = [[255], [136], [136,81], [136,50], [255,136,32], [255,136,20]]
+arcs = [[255], [136], [136,81], [136,50], [128,64,32], [255,136,20]]
 for arc_enc in arcs:
     # Dense Auto-Encoder
     autoenc, enc = red.autoencoder(X, arc_enc, (IMG_HEIGHT*IMG_WIDTH, ))
