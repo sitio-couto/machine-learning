@@ -9,7 +9,7 @@ import clustering as clus
 import visualization as vis
 import misc
 import run
-
+import time
 
 
 data = read_csv('Dataset/fashion-mnist_train.csv')
@@ -24,17 +24,26 @@ X = norm.normalize_data(X, stats, choice).astype('float32')
 Y = to_categorical(Y).astype('int8')
 
 
-# Deep dense neural net
+# Deep dense neural net architecture
 # arc = [470,284,169,100,60,30]
 arc = [300]
-run.run_network(X, Y, arc, (IMG_HEIGHT*IMG_WIDTH, ), N_CLASSES , epochs=30, batch_size=1024, val_split=0.1)
 
 # Deep dense net neural net
-variance = [.95, .90, .85, .80, .75, .70]
+variance = [1, .95, .90, .85, .80, .75, .70]
 for v in variance:
-    pca, Xpca = red.reduce_PCA(X, v)
-    n_comp = pca.n_components_
-    print('Components:', n_comp)
-    print(f'Preserving {v}% of the data.')
+    start = time.process_time()
+    if not v == 1 : 
+        pca, Xpca = red.reduce_PCA(X, v)
+        print("PCA Runtime:", time.process_time() - start)
+        n_comp = pca.n_components_
+        print('Components:', n_comp)
+        print(f'Preserving {v}% of the data.')
+    else : 
+        Xpca = X
+        n_comp = X.shape[1]
+        print("No PCA applied")
+
     # Train with PCA
     run.run_network(Xpca, Y, arc, (n_comp, ), N_CLASSES , epochs=30, batch_size=1024, val_split=0.1)
+    print("Full Runtime:", time.process_time() - start)
+    print("=======================================================================================")
