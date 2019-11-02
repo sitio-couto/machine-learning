@@ -40,6 +40,9 @@ for v in variance:
     model, clusters = clus.k_means(Xpca, N_CLASSES, 'k-means++', 1000, 1e-4)
     # Bind clusters to classes
     Y_pred = clus.label_clusters(N_CLASSES, Y, clusters)
+    vis.pca_plotting(Xpca, Y_pred, classes)
+    exit()
+
     Yv_pred = clus.label_clusters(N_CLASSES, Yv, model.fit_predict(Xvpca))
     # Get accuracies
     train_acc = vis.clustering_accuracy(N_CLASSES, Y, Y_pred)*100
@@ -47,7 +50,7 @@ for v in variance:
     print("Train: ", train_acc)
     print("Valid: ", valid_acc)
     # Get Confusion Matrix
-    CM = vis.build_confusion_matrix(N_CLASSES, Y, Y_pred)
-    np.save(f"cm_train_kmeans_{v}pca", CM)
-    CM = vis.build_confusion_matrix(N_CLASSES, Yv, Yv_pred)
-    np.save(f"cm_val_kmeans_{v}pca", CM)
+    # CM = vis.build_confusion_matrix(N_CLASSES, Y, Y_pred)
+    # np.save(f"cm_train_kmeans_{v}pca", CM)
+    # CM = vis.build_confusion_matrix(N_CLASSES, Yv, Yv_pred)
+    # np.save(f"cm_val_kmeans_{v}pca", CM)
