@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools as it
 import umap
+import misc
 
 def build_confusion_matrix(n_classes, Y_true, Y_pred):
 # Build confusion matrix
@@ -16,9 +17,7 @@ def build_confusion_matrix(n_classes, Y_true, Y_pred):
 
 def clustering_accuracy(n_classes, Y_true, Y_pred):
     CM = build_confusion_matrix(n_classes, Y_true, Y_pred)
-    total = CM.sum()
-    hit = sum(CM[range(n_classes), range(n_classes)])
-    return hit/total
+    return misc.accuracy(CM)
 
 def histogram(pred, amount=10, model='K-Means'):
     plt.hist(pred, bins='auto')
