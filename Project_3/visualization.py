@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 import numpy as np
+import pandas as pd
 import itertools as it
 import umap
 
@@ -25,6 +27,18 @@ def histogram(pred, amount=10, model='K-Means'):
     plt.title("Amount of images per predicted class for " + model)
     plt.xticks(range(amount))
     #plt.grid()
+    plt.show()
+
+def pca_plotting(X, clust, classes):
+    bidim = PCA(n_components=2)
+    Xpca = bidim.fit_transform(X)
+
+    for c,l in enumerate(classes):
+        plt.scatter(Xpca[clust==c,0], Xpca[clust==c,1], label=l)
+    
+    plt.xlabel("First Component")
+    plt.ylabel("Second Component")
+    plt.legend()
     plt.show()
 
 def plot_confusion_matrix(confusion, classes, model):
