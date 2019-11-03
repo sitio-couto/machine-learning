@@ -29,13 +29,16 @@ def histogram(pred, amount=10, model='K-Means'):
     #plt.grid()
     plt.show()
 
-def pca_plotting(X, clust, classes):
+def pca_plotting(X, clust, classes, title="", s=1, size=(20,20)):
     bidim = PCA(n_components=2)
     Xpca = bidim.fit_transform(X)
+    print(f"Preserved Variance {sum(bidim.explained_variance_ratio_)*100:.4}%")
 
     for c,l in enumerate(classes):
-        plt.scatter(Xpca[clust==c,0], Xpca[clust==c,1], label=l)
+        plt.scatter(Xpca[clust==c,0], Xpca[clust==c,1], label=l, s=s)
     
+    plt.rcParams["figure.figsize"] = size
+    plt.title(title)
     plt.xlabel("First Component")
     plt.ylabel("Second Component")
     plt.legend()
