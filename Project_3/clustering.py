@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.cluster import KMeans, OPTICS, AgglomerativeClustering, SpectralClustering, Birch
+from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score, v_measure_score, silhouette_score
+import misc
 
 def k_means(X, n_clusters, init='k-means++', max_iter=300, tolerance=1e-4):
     km = KMeans(n_clusters, init, max_iter=max_iter, tol=tolerance)
@@ -56,3 +58,19 @@ def label_clusters(n_classes, Y_true, clusters):
         Y_pred[clusters==j] = i
 
     return Y_pred
+
+def test_clusters(clusters, Y, n_classes, X):
+    
+    # Get predictions
+    pred = label_clusters(n_classes, Y, clusters)
+    
+    # Supervised Scores
+    rand = adjusted_rand_score(pred, Y)
+    mutual = adjusted_mutual_info_score(pred, Y)
+    vscore = v_measure_score(Y, pred)
+    metrics, CM = misc.get_metrics(Y, pred, n_classes)
+    
+    # Unsupervised Score
+    unsup = silhouette_score(X, clusters, metric='euclidean')
+    
+    return {'rand':rand, 'mutual':mutual, 'vscore':vscore, 'silhouette':unsup, 'acc':metrics['accuracy']}, CM

@@ -4,23 +4,7 @@ import numpy as np
 import pandas as pd
 import itertools as it
 import umap
-
-def build_confusion_matrix(n_classes, Y_true, Y_pred):
-# Build confusion matrix
-    CM = np.zeros((n_classes,n_classes), dtype=int)
-    for i in range(n_classes):
-        mask = (Y_true == i) # Get elements from class i
-        for j in range(n_classes):
-            aux = (Y_pred[mask]==j) # Get elements from class i predicted as class j 
-            CM[i,j] = aux.sum() # Count times class i was predicted as class j
-
-    return CM
-
-def clustering_accuracy(n_classes, Y_true, Y_pred):
-    CM = build_confusion_matrix(n_classes, Y_true, Y_pred)
-    total = CM.sum()
-    hit = sum(CM[range(n_classes), range(n_classes)])
-    return hit/total
+import misc
 
 def histogram(pred, amount=10, model='K-Means'):
     plt.hist(pred, bins='auto')
