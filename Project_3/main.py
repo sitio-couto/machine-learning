@@ -9,6 +9,7 @@ import numpy as np
 from pandas import read_csv
 from keras.utils import to_categorical
 from const import *
+from random import sample
 import normalization as norm
 import neural as nr
 import reduce as red
@@ -20,12 +21,12 @@ import run
 data = read_csv('Dataset/fashion-mnist_train.csv')
 Y = data['label'].to_numpy()
 X = data.drop('label', 1).to_numpy()
-classes = list(CLASS_NAMES.values())
 
 # Normalization
 choice = 2
 stats = norm.get_stats(X, choice)
 X = norm.normalize_data(X, stats, choice).astype('float32')
+Y_label = Y
 Y = to_categorical(Y).astype('int8')
 
 # Get first neural network
@@ -50,14 +51,19 @@ Xenc = enc.predict(X)
 # Training
 run.run_network(Xenc, Y, arc, (arc_enc[-1], ), N_CLASSES , epochs=30, batch_size=1024, val_split=0.1)
 
-# Convolutional Auto-Encoder
-Ximg = X.reshape((X.shape[0], IMG_HEIGHT, IMG_WIDTH))
-
 # K-Means
-km, pred = clus.k_means(Xpca, N_CLASSES, 'k-means++', 1000, 1e-4)
-vis.histogram(pred, N_CLASSES, 'K-Means')
+km, clusters = clus.k_means(Xpca, N_CLASSES, 'k-means++', 1000, 1e-4)
+vis.histogram(clusters, N_CLASSES, 'K-Means')
+dic, CM = clus.test_clusters(clusters, Y_label, N_CLASSES, Xpca)
+vis.plot_confusion_matrix(CM, CLASS_NAMES, 'K-Means')
+print(dic)
 
-# OPTICS
-opt, pred = clus.optics(Xpca, 2)
-print(pred)
-vis.histogram(pred, N_CLASSES, 'OPTICS')
+# Agglomerate
+samp = sample(range(60000), 20000)
+Xagg = Xpca[samp]
+Yagg = Y_label[samp]
+model, clusters = clus.agglomerate(Xagg, N_CLASSES, linkage='ward')
+vis.histogram(clusters, N_CLASSES, 'Agglomerate')
+dic, CM = clus.test_clusters(clusters, Yagg, N_CLASSES, Xagg)
+vis.plot_confusion_matrix(CM, CLASS_NAMES, 'Agglomerate')
+print(dic)
