@@ -1,20 +1,22 @@
 import numpy as np
 import visualization as vis
+import normalization as norm
 import misc
 from const import *
+from pandas import read_csv
 
 path = "Confusion Matricies/aggclust/"
 train = "cm_train_aggclus_"
 valid = "cm_val_aggclus_"
 pcas = ["0.95pca", "0.9pca", "0.85pca","0.8pca", "0.75pca", "0.7pca"]
 
+classes = list(CLASS_NAMES.values())
+
 train_cms = []
 valid_cms = []
 for x in pcas:
     train_cms.append(np.load(path+train+x+'.npy'))
     valid_cms.append(np.load(path+valid+x+'.npy'))
-
-classes = list(CLASS_NAMES.values())
 
 for i,p in enumerate(pcas):
     print("Model: "+p)

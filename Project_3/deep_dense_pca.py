@@ -29,7 +29,7 @@ Y = to_categorical(Y).astype('int8')
 arc = [300]
 
 # Deep dense net neural net
-variance = [1, .95, .90, .85, .80, .75, .70]
+variance = [.95, .90, .85, .80, .75, .70]
 for v in variance:
     start = time.process_time()
     if not v == 1 : 
